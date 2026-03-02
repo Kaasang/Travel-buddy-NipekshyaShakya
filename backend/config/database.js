@@ -6,14 +6,20 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
+const cleanEnv = (value, fallback = '') => {
+  if (typeof value !== 'string') return fallback;
+  const trimmed = value.trim();
+  return trimmed === '' ? fallback : trimmed;
+};
+
 // Create Sequelize instance with MySQL connection
 const sequelize = new Sequelize(
-  process.env.DB_NAME || 'travel_buddy',
-  process.env.DB_USER || 'root',
-  process.env.DB_PASSWORD || '',
+  cleanEnv(process.env.DB_NAME, 'travel_buddy'),
+  cleanEnv(process.env.DB_USER, 'root'),
+  cleanEnv(process.env.DB_PASSWORD, ''),
   {
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 3306,
+    host: cleanEnv(process.env.DB_HOST, 'localhost'),
+    port: Number(cleanEnv(process.env.DB_PORT, '3306')),
     dialect: 'mysql',
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
     pool: {
