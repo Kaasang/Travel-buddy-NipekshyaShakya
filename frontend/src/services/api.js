@@ -32,10 +32,16 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            // Clear token and redirect to login
+            // Clear stored credentials so ProtectedRoute / AuthContext
+            // will detect the user is no longer authenticated and redirect
+            // via React Router (with replace) instead of a hard page reload.
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            window.location.href = '/login';
+            localStorage.removeItem('role');
+            // NOTE: We intentionally do NOT do window.location.href here.
+            // The React ProtectedRoute component reads live context state and
+            // will <Navigate to="/login" replace /> on the next render cycle.
+            // A hard redirect would bypass React state and cause race conditions.
         }
         return Promise.reject(error);
     }

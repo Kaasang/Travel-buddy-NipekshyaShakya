@@ -16,6 +16,8 @@ const adminRoutes = require('./adminRoutes');
 const reportRoutes = require('./reportRoutes');
 const notificationRoutes = require('./notificationRoutes');
 const ratingRoutes = require('./ratingRoutes');
+const verificationRoutes = require('./verificationRoutes');
+const trekRoutes = require('./trekRoutes');
 
 // API health check
 router.get('/health', (req, res) => {
@@ -36,5 +38,7 @@ router.use('/admin', adminRoutes);
 router.use('/reports', reportRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/ratings', ratingRoutes);
+router.use('/verification', verificationRoutes);
+router.use('/treks', trekRoutes);
 
 module.exports = router;

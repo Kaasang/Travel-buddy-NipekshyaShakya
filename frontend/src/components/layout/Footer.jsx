@@ -60,6 +60,7 @@ const Footer = () => {
                             <li><a href="#" className="text-gray-400 hover:text-primary-400 transition-colors">Safety Tips</a></li>
                             <li><a href="#" className="text-gray-400 hover:text-primary-400 transition-colors">Community Guidelines</a></li>
                             <li><a href="#" className="text-gray-400 hover:text-primary-400 transition-colors">Report an Issue</a></li>
+                            <li><Link to="/about" className="text-gray-400 hover:text-primary-400 transition-colors">About & Contact</Link></li>
                         </ul>
                     </div>
 

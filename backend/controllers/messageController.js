@@ -246,8 +246,9 @@ const getInbox = asyncHandler(async (req, res) => {
         const otherUserId = msg.senderId === req.user.id ? msg.receiverId : msg.senderId;
         const otherUser = msg.senderId === req.user.id ? msg.receiver : msg.sender;
 
-        if (!conversationsMap.has(otherUserId) ||
-            new Date(msg.createdAt) > new Date(conversationsMap.get(otherUserId).lastMessage.createdAt)) {
+        const existingConvo = conversationsMap.get(otherUserId);
+        
+        if (!existingConvo || new Date(msg.createdAt) > new Date(existingConvo.lastMessage.createdAt)) {
             conversationsMap.set(otherUserId, {
                 userId: otherUserId,
                 user: otherUser,

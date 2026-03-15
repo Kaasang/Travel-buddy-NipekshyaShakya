@@ -47,6 +47,16 @@ const User = sequelize.define('User', {
         defaultValue: false,
         field: 'is_suspended'
     },
+    verificationStatus: {
+        type: DataTypes.ENUM('unverified', 'pending_review', 'approved', 'rejected'),
+        defaultValue: 'unverified',
+        field: 'verification_status'
+    },
+    rejectionReason: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        field: 'rejection_reason'
+    },
     lastLogin: {
         type: DataTypes.DATE,
         field: 'last_login'
@@ -92,6 +102,8 @@ User.prototype.toSafeObject = function () {
         email: this.email,
         role: this.role,
         isVerified: this.isVerified,
+        verificationStatus: this.verificationStatus,
+        rejectionReason: this.rejectionReason,
         isSuspended: this.isSuspended,
         createdAt: this.createdAt
     };

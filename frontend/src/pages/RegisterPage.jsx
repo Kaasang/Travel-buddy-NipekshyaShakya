@@ -167,22 +167,6 @@ const RegisterPage = () => {
                             </div>
                         </div>
 
-                        {/* Terms */}
-                        <div className="flex items-start">
-                            <input
-                                type="checkbox"
-                                id="terms"
-                                required
-                                className="rounded border-gray-400 bg-white/10 text-primary-500 focus:ring-primary-500 mt-1"
-                            />
-                            <label htmlFor="terms" className="ml-2 text-sm text-gray-300">
-                                I agree to the{' '}
-                                <a href="#" className="text-primary-400 hover:text-primary-300 transition-colors">Terms of Service</a>
-                                {' '}and{' '}
-                                <a href="#" className="text-primary-400 hover:text-primary-300 transition-colors">Privacy Policy</a>
-                            </label>
-                        </div>
-
                         {/* Submit */}
                         <button
                             type="submit"

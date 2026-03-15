@@ -51,7 +51,7 @@ const HomePage = () => {
   const recommendedTours = [
     {
       id: 1,
-      image: '/images/himalayas/tour-1.jpg',
+      image: '/images/himalayas/everestbasecamp.avif',
       title: 'Everest Base Camp Trek',
       duration: '14 Days',
       price: '$1500',
@@ -59,7 +59,7 @@ const HomePage = () => {
     },
     {
       id: 2,
-      image: '/images/himalayas/tour-2.jpg',
+      image: '/images/himalayas/Annapurna.jpg',
       title: 'Annapurna Circuit Trek',
       duration: '18 Days',
       price: '$1800',
@@ -67,7 +67,7 @@ const HomePage = () => {
     },
     {
       id: 3,
-      image: '/images/himalayas/tour-3.jpg',
+      image: '/images/himalayas/Langtang-Valley-Trek-1.jpg',
       title: 'Langtang Valley Trek',
       duration: '10 Days',
       price: '$1000',
@@ -75,7 +75,7 @@ const HomePage = () => {
     },
     {
       id: 4,
-      image: '/images/himalayas/tour-4.jpg',
+      image: '/images/himalayas/uppermustang.jpg',
       title: 'Upper Mustang Trek',
       duration: '12 Days',
       price: '$2200',
@@ -312,35 +312,35 @@ const HomePage = () => {
                 location: 'Mount Everest Base Camp',
                 days: '14 Days',
                 price: 'Rs. 45,000',
-                image: '/images/himalayas/hero.jpg'
+                image: '/images/recommend/himalyas.jpg'
               },
               {
                 title: 'Kathmandu Cultural Tour',
                 location: 'Kathmandu Valley',
                 days: '5 Days',
                 price: 'Rs. 15,000',
-                image: '/images/himalayas/trek.jpg'
+                image: '/images/recommend/culture.jpg'
               },
               {
                 title: 'Pokhara Lakeside Retreat',
                 location: 'Phewa Lake, Pokhara',
                 days: '7 Days',
                 price: 'Rs. 25,000',
-                image: '/images/himalayas/scenery.jpg'
+                image: '/images/recommend/ppokhara.jpg'
               },
               {
                 title: 'Chitwan Jungle Safari',
                 location: 'Chitwan National Park',
                 days: '3 Days',
                 price: 'Rs. 18,000',
-                image: '/images/himalayas/scenery.jpg'
+                image: '/images/recommend/jungle.jpg'
               },
               {
                 title: 'Annapurna Base Camp',
                 location: 'Annapurna Conservation',
                 days: '10 Days',
                 price: 'Rs. 35,000',
-                image: '/images/himalayas/trek.jpg'
+                image: '/images/himalayas/Annapurna.jpg'
               }
             ].map((tour, index) => (
               <div key={index} className="min-w-[300px] md:min-w-[350px] snap-center card hover:shadow-2xl transition-all duration-300 group p-0 overflow-hidden bg-white/80 backdrop-blur-md border border-white/40">
@@ -379,12 +379,20 @@ const HomePage = () => {
             Join thousands of travelers who have already found their perfect
             travel companions.
           </p>
-          <Link
-            to="/register"
-            className="btn bg-white text-primary-600 hover:bg-gray-100 px-10 py-4 text-lg font-semibold shadow-lg inline-block"
-          >
-            Start Your Adventure
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              to="/register"
+              className="btn bg-white text-primary-600 hover:bg-gray-100 px-10 py-4 text-lg font-semibold shadow-lg inline-block"
+            >
+              Start Your Adventure
+            </Link>
+            <Link
+              to="/about"
+              className="btn border-2 border-white text-white hover:bg-white/10 px-10 py-4 text-lg inline-block"
+            >
+              About &amp; Contact Us
+            </Link>
+          </div>
         </div>
       </section>
     </div>

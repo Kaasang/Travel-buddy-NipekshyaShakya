@@ -3,9 +3,11 @@
  */
 import { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { adminAPI } from '../../services/api';
+import { adminAPI, userAPI } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
-import { HiUsers, HiMap, HiFlag, HiChartBar, HiCheck, HiBan, HiTrash } from 'react-icons/hi';
+import { HiUsers, HiMap, HiFlag, HiChartBar, HiCheck, HiBan, HiTrash, HiShieldCheck, HiUser, HiCamera } from 'react-icons/hi';
+import VerificationsAdminPage from './VerificationsAdminPage';
 
 // Stats Component
 const Stats = () => {
@@ -133,13 +135,60 @@ const ReportsManagement = () => {
     );
 };
 
+// Admin Profile Upload
+const AdminProfile = () => {
+    const { user, updateUser } = useAuth();
+
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('profilePicture', file);
+
+        try {
+            const response = await userAPI.uploadProfilePicture(formData);
+            updateUser({ profile: { ...user.profile, profilePicture: response.data.data.profilePicture } });
+            toast.success('Admin profile picture updated!');
+        } catch (error) {
+            toast.error('Failed to upload image');
+        }
+    };
+
+    return (
+        <div className="card max-w-2xl mx-auto mt-8">
+            <h3 className="font-semibold text-xl mb-6">Admin Profile Picture</h3>
+            <div className="flex flex-col items-center space-y-6">
+                <div className="relative">
+                    <img
+                        src={user?.profile?.profilePicture || `https://ui-avatars.com/api/?name=${user?.profile?.fullName || 'Admin'}&size=128`}
+                        alt="Admin Profile"
+                        className="w-40 h-40 rounded-full object-cover border-4 border-primary-100 shadow-md"
+                    />
+                    <label className="absolute bottom-2 right-2 w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary-700 shadow-lg transition-transform hover:scale-110">
+                        <HiCamera className="w-5 h-5 text-white" />
+                        <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                    </label>
+                </div>
+                <div className="text-center">
+                    <p className="text-gray-900 font-medium text-lg">{user?.profile?.fullName || 'Admin User'}</p>
+                    <p className="text-gray-500 text-sm mt-1">{user?.email}</p>
+                    <p className="text-xs text-gray-400 mt-4">JPG, PNG, GIF up to 5MB</p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // Main Admin Dashboard
 const AdminDashboard = () => {
     const location = useLocation();
     const tabs = [
         { path: '/admin', icon: HiChartBar, label: 'Overview' },
         { path: '/admin/users', icon: HiUsers, label: 'Users' },
+        { path: '/admin/verifications', icon: HiShieldCheck, label: 'Verifications' },
         { path: '/admin/reports', icon: HiFlag, label: 'Reports' },
+        { path: '/admin/profile', icon: HiUser, label: 'Profile' },
     ];
 
     return (
@@ -160,7 +209,9 @@ const AdminDashboard = () => {
             <Routes>
                 <Route path="/" element={<><Stats /><div className="grid md:grid-cols-2 gap-6"><UsersManagement /><ReportsManagement /></div></>} />
                 <Route path="/users" element={<UsersManagement />} />
+                <Route path="/verifications" element={<VerificationsAdminPage />} />
                 <Route path="/reports" element={<ReportsManagement />} />
+                <Route path="/profile" element={<AdminProfile />} />
             </Routes>
         </div>
     );

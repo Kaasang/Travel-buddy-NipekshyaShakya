@@ -14,6 +14,8 @@ const Message = require('./Message');
 const Report = require('./Report');
 const Rating = require('./Rating');
 const Notification = require('./Notification');
+const VerificationRequest = require('./VerificationRequest');
+const Trek = require('./Trek');
 
 // ==========================================
 // Define Model Associations
@@ -175,6 +177,36 @@ Notification.belongsTo(User, {
     foreignKey: 'userId'
 });
 
+// User - VerificationRequest
+User.hasMany(VerificationRequest, {
+    foreignKey: 'userId',
+    as: 'verificationRequests'
+});
+VerificationRequest.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'user'
+});
+
+// Admin Reviewer - VerificationRequest
+User.hasMany(VerificationRequest, {
+    foreignKey: 'reviewedBy',
+    as: 'reviewedVerifications'
+});
+VerificationRequest.belongsTo(User, {
+    foreignKey: 'reviewedBy',
+    as: 'reviewer'
+});
+
+// User - Trek (Poster)
+User.hasMany(Trek, {
+    foreignKey: 'userId',
+    as: 'treks'
+});
+Trek.belongsTo(User, {
+    foreignKey: 'userId',
+    as: 'poster'
+});
+
 // ==========================================
 // Export everything
 // ==========================================
@@ -189,5 +221,7 @@ module.exports = {
     Message,
     Report,
     Rating,
-    Notification
+    Notification,
+    VerificationRequest,
+    Trek
 };

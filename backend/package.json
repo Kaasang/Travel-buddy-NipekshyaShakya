@@ -9,7 +9,11 @@
     "setup": "node setup-database.js",
     "test": "echo \"Tests configured\" && exit 0"
   },
-  "keywords": ["travel", "networking", "api"],
+  "keywords": [
+    "travel",
+    "networking",
+    "api"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
@@ -21,7 +25,7 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.6.5",
-    "sequelize": "^6.35.2"
+    "sequelize": "^6.37.8"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

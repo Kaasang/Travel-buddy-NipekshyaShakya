@@ -17,6 +17,8 @@ export const AuthProvider = ({ children }) => {
     const clearAuthState = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        localStorage.removeItem('role');
+        sessionStorage.clear();
         setUser(null);
         setIsAuthenticated(false);
     };
@@ -44,6 +46,7 @@ export const AuthProvider = ({ children }) => {
         try {
             const response = await authAPI.getMe();
             const userData = response.data.data;
+            
             setUser(userData);
             localStorage.setItem('user', JSON.stringify(userData));
         } catch (error) {
@@ -58,6 +61,7 @@ export const AuthProvider = ({ children }) => {
 
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('role', userData.role || 'user');
         setUser(userData);
         setIsAuthenticated(true);
 
@@ -71,6 +75,7 @@ export const AuthProvider = ({ children }) => {
 
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('role', userData.role || 'user');
         setUser(userData);
         setIsAuthenticated(true);
 
@@ -100,6 +105,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         isAuthenticated,
         isAdmin: user?.role === 'admin',
+        isVerified: user?.verificationStatus === 'approved',
         register,
         login,
         logout,

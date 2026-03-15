@@ -3,37 +3,64 @@
  * Main navigation header with responsive mobile menu
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
+import { notificationAPI } from '../../services/api';
 import {
     HiMenu, HiX, HiHome, HiUsers, HiMap, HiChat,
-    HiUser, HiBell, HiLogout, HiCog, HiGlobe, HiBookOpen
+    HiUser, HiBell, HiLogout, HiCog, HiGlobe, HiBookOpen,
+    HiInformationCircle, HiTruck, HiCheckCircle, HiClock
 } from 'react-icons/hi';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
-    const { user, isAuthenticated, isAdmin, logout } = useAuth();
+    const { user, isAuthenticated, isAdmin, isVerified, logout } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    const verificationStatus = user?.verificationStatus;
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchUnreadCount();
+        }
+    }, [isAuthenticated, location.pathname]);
+
+    const fetchUnreadCount = async () => {
+        try {
+            if (!isAuthenticated) return;
+            const response = await notificationAPI.getUnreadCount();
+            setUnreadCount(response.data.data.count || 0);
+        } catch (error) {
+            console.error('Error fetching unread count', error);
+        }
+    };
 
     const handleLogout = async () => {
         await logout();
-        navigate('/');
+        navigate('/', { replace: true });
+        toast.success('Logged out successfully');
         setShowDropdown(false);
         setIsOpen(false);
     };
 
     const navLinks = isAuthenticated ? [
         { name: 'Dashboard', path: '/dashboard', icon: HiHome },
-        { name: 'Find Buddies', path: '/matches', icon: HiUsers },
+        { name: 'Find Buddies', path: '/find-buddies', icon: HiUsers },
         { name: 'Trips', path: '/trips', icon: HiMap },
+        { name: 'Services', path: '/services', icon: HiTruck },
         { name: 'Recommendations', path: '/recommendations', icon: HiGlobe },
         { name: 'Blog', path: '/blog', icon: HiBookOpen },
         { name: 'Messages', path: '/messages', icon: HiChat },
     ] : [
         { name: 'Home', path: '/', icon: HiHome },
+        { name: 'Find Buddies', path: '/find-buddies', icon: HiUsers },
+        { name: 'Services', path: '/services', icon: HiTruck },
+        { name: 'About', path: '/about', icon: HiInformationCircle },
     ];
 
     const isActive = (path) => location.pathname === path;
@@ -75,7 +102,11 @@ const Navbar = () => {
                                 <Link to="/notifications" className="p-2 text-gray-600 hover:text-primary-600 relative">
                                     <HiBell className="w-6 h-6" />
                                     {/* Notification badge */}
-                                    <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                                    {unreadCount > 0 && (
+                                        <span className="absolute top-1 right-1 flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-red-500 rounded-full border border-white">
+                                            {unreadCount > 9 ? '9+' : unreadCount}
+                                        </span>
+                                    )}
                                 </Link>
 
                                 {/* User Dropdown */}
@@ -90,14 +121,20 @@ const Navbar = () => {
                                             className="w-8 h-8 rounded-full object-cover bg-gray-200"
                                             onError={(e) => { e.target.src = 'https://ui-avatars.com/api/?name=' + (user?.profile?.fullName || 'User'); }}
                                         />
-                                        <span className="text-gray-700 font-medium">
+                                        <span className="text-gray-700 font-medium flex items-center gap-1.5">
                                             {user?.profile?.fullName?.split(' ')[0] || 'User'}
+                                            {verificationStatus === 'approved' && (
+                                                <HiCheckCircle className="w-4 h-4 text-green-500" title="Verified" />
+                                            )}
+                                            {verificationStatus === 'pending_review' && (
+                                                <HiClock className="w-4 h-4 text-yellow-500" title="Verification Pending" />
+                                            )}
                                         </span>
                                     </button>
 
                                     {/* Dropdown menu */}
                                     {showDropdown && (
-                                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 animate-fade-in">
+                                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 animate-fade-in z-50">
                                             <Link
                                                 to="/profile"
                                                 onClick={() => setShowDropdown(false)}

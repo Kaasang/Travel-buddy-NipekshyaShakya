@@ -16,35 +16,35 @@ const RecommendationsPage = () => {
                         location: 'Mount Everest Base Camp',
                         days: '14 Days',
                         price: 'Rs. 45,000',
-                        image: '/images/himalayas/hero.jpg'
+                        image: '/images/recommend/himalyas.jpg'
                     },
                     {
                         title: 'Kathmandu Cultural Tour',
                         location: 'Kathmandu Valley',
                         days: '5 Days',
                         price: 'Rs. 15,000',
-                        image: '/images/himalayas/trek.jpg'
+                        image: '/images/recommend/culture.jpg'
                     },
                     {
                         title: 'Pokhara Lakeside Retreat',
                         location: 'Phewa Lake, Pokhara',
                         days: '7 Days',
                         price: 'Rs. 25,000',
-                        image: '/images/himalayas/scenery.jpg'
+                        image: '/images/tripp/Pokhara_Valley.jpg'
                     },
                     {
                         title: 'Chitwan Jungle Safari',
                         location: 'Chitwan National Park',
                         days: '3 Days',
                         price: 'Rs. 18,000',
-                        image: '/images/himalayas/scenery.jpg'
+                        image: '/images/recommend/jungle.jpg'
                     },
                     {
                         title: 'Annapurna Base Camp',
                         location: 'Annapurna Conservation',
                         days: '10 Days',
                         price: 'Rs. 35,000',
-                        image: '/images/himalayas/trek.jpg'
+                        image: '/images/himalayas/Annapurna.jpg'
                     }
                 ].map((tour, index) => (
                     <div key={index} className="card hover:shadow-lg transition-shadow group p-0 overflow-hidden">

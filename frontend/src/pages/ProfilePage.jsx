@@ -6,14 +6,15 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ratingAPI, tripAPI } from '../services/api';
+import { ratingAPI, tripAPI, userAPI } from '../services/api';
+import toast from 'react-hot-toast';
 import {
     HiPencil, HiLocationMarker, HiCalendar, HiUsers,
-    HiStar, HiBadgeCheck, HiGlobe
+    HiStar, HiBadgeCheck, HiGlobe, HiCamera
 } from 'react-icons/hi';
 
 const ProfilePage = () => {
-    const { user } = useAuth();
+    const { user, updateUser } = useAuth();
     const [ratings, setRatings] = useState({ ratings: [], stats: {} });
     const [trips, setTrips] = useState({ created: [], joined: [] });
     const [activeTab, setActiveTab] = useState('about');
@@ -35,6 +36,25 @@ const ProfilePage = () => {
         }
     };
 
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('profilePicture', file);
+
+        try {
+            const response = await userAPI.uploadProfilePicture(formData);
+            if (updateUser) {
+                 updateUser({ profile: { ...user.profile, profilePicture: response.data.data.profilePicture } });
+            }
+            toast.success('Profile picture updated!');
+            fetchProfileData();
+        } catch (error) {
+            toast.error('Failed to upload image');
+        }
+    };
+
     const profile = user?.profile || {};
     const destinations = profile.preferredDestinations || [];
 
@@ -44,14 +64,20 @@ const ProfilePage = () => {
             <div className="card mb-6">
                 <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
                     {/* Avatar */}
-                    <div className="relative">
+                    <div className="relative group">
                         <img
                             src={profile.profilePicture || `https://ui-avatars.com/api/?name=${profile.fullName}&size=128`}
                             alt={profile.fullName}
                             className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
                         />
+                        {/* Upload Overlay */}
+                        <label className="absolute inset-0 bg-black/40 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer border-4 border-transparent">
+                            <HiCamera className="w-8 h-8 text-white mb-1" />
+                            <span className="text-white text-xs font-semibold">Change</span>
+                            <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                        </label>
                         {user?.isVerified && (
-                            <div className="absolute bottom-0 right-0 bg-green-500 rounded-full p-1">
+                            <div className="absolute bottom-0 right-0 bg-green-500 rounded-full p-1 z-10">
                                 <HiBadgeCheck className="w-6 h-6 text-white" />
                             </div>
                         )}

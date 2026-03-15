@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { HiMail, HiLockClosed, HiEye, HiEyeOff } from 'react-icons/hi';
@@ -18,9 +18,34 @@ const LoginPage = () => {
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // Redirect target: from location.state or localStorage fallback
+    const redirectTo = location.state?.from || null;
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleLoginSuccess = (responseData) => {
+        const role = responseData?.data?.user?.role;
+        localStorage.removeItem('bookingRedirect');
+
+        // Role-based redirect: respect redirectTo unless it's a role mismatch
+        if (redirectTo) {
+            const isAdminRoute = redirectTo.startsWith('/admin');
+            if (role === 'admin' && !isAdminRoute) {
+                // Admin was redirected from a user page — send to admin panel
+                navigate('/admin', { replace: true });
+            } else if (role !== 'admin' && isAdminRoute) {
+                // User was redirected from an admin page — send to dashboard
+                navigate('/dashboard', { replace: true });
+            } else {
+                navigate(redirectTo, { replace: true });
+            }
+        } else {
+            navigate(role === 'admin' ? '/admin' : '/dashboard', { replace: true });
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -28,11 +53,25 @@ const LoginPage = () => {
         setLoading(true);
 
         try {
-            await login(formData.email, formData.password);
+            const responseData = await login(formData.email, formData.password);
             toast.success('Welcome back!');
-            navigate('/dashboard');
+            handleLoginSuccess(responseData);
         } catch (error) {
             const message = error.response?.data?.message || 'Login failed. Please try again.';
+            toast.error(message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDemoLogin = async (email, password) => {
+        setLoading(true);
+        try {
+            const responseData = await login(email, password);
+            toast.success('Welcome back!');
+            handleLoginSuccess(responseData);
+        } catch (error) {
+            const message = error.response?.data?.message || 'Demo login failed. Please try again.';
             toast.error(message);
         } finally {
             setLoading(false);
@@ -141,12 +180,28 @@ const LoginPage = () => {
                         </button>
                     </form>
 
-                    {/* Demo accounts */}
+                    {/* Demo Login Buttons */}
                     <div className="mt-6 p-4 bg-white/5 border border-white/10 rounded-lg">
-                        <p className="text-sm text-gray-300 mb-2">Demo Accounts:</p>
-                        <div className="text-xs text-gray-400 space-y-1">
-                            <div><strong className="text-gray-200">Admin:</strong> admin@travelbuddy.com / admin123</div>
-                            <div><strong className="text-gray-200">User:</strong> john@example.com / password123</div>
+                        <p className="text-sm text-gray-300 mb-3">Quick Demo Access:</p>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                disabled={loading}
+                                onClick={() => handleDemoLogin('john@example.com', 'password123')}
+                                className="flex-1 py-2.5 px-3 rounded-lg bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 hover:bg-emerald-500/30 transition-colors text-sm font-medium disabled:opacity-50"
+                                id="demo-user-login"
+                            >
+                                🧑 Demo User
+                            </button>
+                            <button
+                                type="button"
+                                disabled={loading}
+                                onClick={() => handleDemoLogin('admin@travelbuddy.com', 'admin123')}
+                                className="flex-1 py-2.5 px-3 rounded-lg bg-purple-500/20 border border-purple-400/30 text-purple-300 hover:bg-purple-500/30 transition-colors text-sm font-medium disabled:opacity-50"
+                                id="demo-admin-login"
+                            >
+                                🔑 Demo Admin
+                            </button>
                         </div>
                     </div>
 

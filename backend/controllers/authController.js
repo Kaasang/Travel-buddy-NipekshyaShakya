@@ -93,6 +93,9 @@ const login = asyncHandler(async (req, res) => {
     // Generate token
     const token = generateToken(user.id);
 
+    // Debug: log what is being stored/returned on login
+    console.log(`[AUTH LOGIN] User ID: ${user.id}, Email: ${user.email}, Role: ${user.role}, Token issued (Bearer in localStorage)`);
+
     res.json({
         success: true,
         message: 'Login successful',
@@ -159,8 +162,11 @@ const updatePassword = asyncHandler(async (req, res) => {
  * @access  Private
  */
 const logout = asyncHandler(async (req, res) => {
-    // Token invalidation would be handled client-side
-    // In a production app, you might use a token blacklist
+    // Debug: confirm server-side logout processed
+    console.log(`[AUTH LOGOUT] User ID: ${req.user?.id}, Email: ${req.user?.email} — token will be discarded client-side`);
+
+    // Token invalidation is handled client-side (localStorage cleared).
+    // In a production app, you would add the token to a blacklist/revocation list here.
     res.json({
         success: true,
         message: 'Logged out successfully'

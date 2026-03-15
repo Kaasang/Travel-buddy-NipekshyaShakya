@@ -25,8 +25,19 @@ import MatchesPage from './pages/MatchesPage';
 import MessagesPage from './pages/MessagesPage';
 import UserProfilePage from './pages/UserProfilePage';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import VerificationsAdminPage from './pages/admin/VerificationsAdminPage';
 import RecommendationsPage from './pages/RecommendationsPage';
 import BlogPage from './pages/BlogPage';
+import BlogDetailsPage from './pages/BlogDetailsPage';
+import AboutContactPage from './pages/AboutContactPage';
+import ServicesPage from './pages/ServicesPage';
+import ServiceDetailsPage from './pages/ServiceDetailsPage';
+import VerificationPage from './pages/VerificationPage';
+import TrekDetailsPage from './pages/TrekDetailsPage';
+import PostTrekPage from './pages/PostTrekPage';
+import ChatPage from './pages/ChatPage';
+import NotificationsPage from './pages/NotificationsPage';
+import RequireVerified from './components/shared/RequireVerified';
 
 // Protected Route wrapper
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -53,7 +64,7 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 
 // Public Route wrapper (redirect if authenticated)
 const PublicRoute = ({ children }) => {
-    const { isAuthenticated, loading } = useAuth();
+    const { isAuthenticated, isAdmin, loading } = useAuth();
 
     if (loading) {
         return (
@@ -64,7 +75,7 @@ const PublicRoute = ({ children }) => {
     }
 
     if (isAuthenticated) {
-        return <Navigate to="/dashboard" replace />;
+        return <Navigate to={isAdmin ? '/admin' : '/dashboard'} replace />;
     }
 
     return children;
@@ -88,9 +99,7 @@ function AppRoutes() {
         <Routes>
             {/* Public routes */}
             <Route path="/" element={
-                <PublicRoute>
-                    <Layout><HomePage /></Layout>
-                </PublicRoute>
+                <Layout><HomePage /></Layout>
             } />
             <Route path="/login" element={
                 <PublicRoute>
@@ -102,6 +111,18 @@ function AppRoutes() {
                     <Layout showFooter={false}><RegisterPage /></Layout>
                 </PublicRoute>
             } />
+            <Route path="/about" element={
+                <Layout><AboutContactPage /></Layout>
+            } />
+            <Route path="/services" element={
+                <Layout><ServicesPage /></Layout>
+            } />
+            <Route path="/services/:type/:id" element={
+                <Layout><ServiceDetailsPage /></Layout>
+            } />
+            {/* Find Buddies — public access (browse treks without login) */}
+            <Route path="/find-buddies" element={<Layout><MatchesPage /></Layout>} />
+            <Route path="/treks/:id" element={<Layout><TrekDetailsPage /></Layout>} />
 
             {/* Protected routes */}
             <Route path="/dashboard" element={
@@ -119,6 +140,26 @@ function AppRoutes() {
                     <Layout><EditProfilePage /></Layout>
                 </ProtectedRoute>
             } />
+            <Route path="/notifications" element={
+                <ProtectedRoute>
+                    <Layout><NotificationsPage /></Layout>
+                </ProtectedRoute>
+            } />
+            <Route path="/verify" element={
+                <ProtectedRoute>
+                    <Layout><VerificationPage /></Layout>
+                </ProtectedRoute>
+            } />
+            <Route path="/treks/create" element={
+                <RequireVerified>
+                    <Layout><PostTrekPage /></Layout>
+                </RequireVerified>
+            } />
+            <Route path="/chat" element={
+                <RequireVerified>
+                    <Layout><ChatPage /></Layout>
+                </RequireVerified>
+            } />
             <Route path="/users/:id" element={
                 <ProtectedRoute>
                     <Layout><UserProfilePage /></Layout>
@@ -132,6 +173,11 @@ function AppRoutes() {
             <Route path="/blog" element={
                 <ProtectedRoute>
                     <Layout><BlogPage /></Layout>
+                </ProtectedRoute>
+            } />
+            <Route path="/blog/:id" element={
+                <ProtectedRoute>
+                    <Layout><BlogDetailsPage /></Layout>
                 </ProtectedRoute>
             } />
             <Route path="/trips" element={
@@ -149,10 +195,9 @@ function AppRoutes() {
                     <Layout><TripDetailsPage /></Layout>
                 </ProtectedRoute>
             } />
+            {/* /matches kept as alias for backwards compatibility */}
             <Route path="/matches" element={
-                <ProtectedRoute>
-                    <Layout><MatchesPage /></Layout>
-                </ProtectedRoute>
+                <Layout><MatchesPage /></Layout>
             } />
             <Route path="/messages" element={
                 <ProtectedRoute>
@@ -167,7 +212,7 @@ function AppRoutes() {
 
             {/* Admin routes */}
             <Route path="/admin/*" element={
-                <ProtectedRoute adminOnly>
+                <ProtectedRoute adminOnly={true}>
                     <Layout><AdminDashboard /></Layout>
                 </ProtectedRoute>
             } />
