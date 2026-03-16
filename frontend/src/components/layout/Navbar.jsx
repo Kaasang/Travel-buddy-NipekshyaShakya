@@ -71,9 +71,7 @@ const Navbar = () => {
                 <div className="flex justify-between items-center h-16">
                     {/* Logo */}
                     <Link to={isAuthenticated ? '/dashboard' : '/'} className="flex items-center space-x-2">
-                        <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
-                            <span className="text-white font-bold text-xl">TB</span>
-                        </div>
+                        <img src="/logo.png" alt="Travel Buddy Logo" className="h-12 w-auto object-contain" />
                         <span className="font-bold text-xl text-gray-900">Travel Buddy</span>
                     </Link>
 
