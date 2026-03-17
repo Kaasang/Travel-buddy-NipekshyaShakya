@@ -1,26 +1,144 @@
 /**
  * Services Page
- * Browse Bus, Hotel, and Trekking services with category tabs
+ * Browse Bus, Hotel, Trekking services and Recommended Tours with category tabs
  */
 
-import { useState } from 'react';
-import { HiTruck, HiOfficeBuilding, HiFlag } from 'react-icons/hi';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { HiTruck, HiOfficeBuilding, HiFlag, HiGlobe, HiMap } from 'react-icons/hi';
 import { busServices, hotelServices, trekServices } from '../data/servicesData';
 import ServiceCard from '../components/ServiceCard';
 import BookingModal from '../components/BookingModal';
 import useBooking from '../hooks/useBooking';
+import { useAuth } from '../context/AuthContext';
+import { bookingAPI, serviceAPI } from '../services/api';
+import toast from 'react-hot-toast';
+
+const recommendedTours = [
+    {
+        title: 'Himalayan Adventure Trek',
+        location: 'Mount Everest Base Camp',
+        days: '14 Days',
+        price: 'Rs. 45,000',
+        image: '/images/recommend/himalyas.jpg'
+    },
+    {
+        title: 'Kathmandu Cultural Tour',
+        location: 'Kathmandu Valley',
+        days: '5 Days',
+        price: 'Rs. 15,000',
+        image: '/images/recommend/culture.jpg'
+    },
+    {
+        title: 'Pokhara Lakeside Retreat',
+        location: 'Phewa Lake, Pokhara',
+        days: '7 Days',
+        price: 'Rs. 25,000',
+        image: '/images/recommend/ppokhara.jpg'
+    },
+    {
+        title: 'Chitwan Jungle Safari',
+        location: 'Chitwan National Park',
+        days: '3 Days',
+        price: 'Rs. 18,000',
+        image: '/images/recommend/jungle.jpg'
+    },
+    {
+        title: 'Annapurna Base Camp',
+        location: 'Annapurna Conservation',
+        days: '10 Days',
+        price: 'Rs. 35,000',
+        image: '/images/himalayas/Annapurna.jpg'
+    }
+];
 
 const tabs = [
     { key: 'bus', label: 'Bus & Transport', icon: HiTruck, data: busServices },
     { key: 'hotel', label: 'Hotels & Stays', icon: HiOfficeBuilding, data: hotelServices },
     { key: 'trek', label: 'Trekking Packages', icon: HiFlag, data: trekServices },
+    { key: 'recommended', label: 'Recommended Tours', icon: HiGlobe, data: null },
 ];
 
 const ServicesPage = () => {
     const [activeTab, setActiveTab] = useState('bus');
-    const { handleBookNow, bookingItem, showModal, closeModal, confirmBooking } = useBooking();
+    const { handleBookNow, bookingItem, showModal, closeModal, confirmBooking, cancelBooking } = useBooking();
+    const { isAuthenticated, isAdmin } = useAuth();
+    const [userBookings, setUserBookings] = useState([]);
+    const [apiServices, setApiServices] = useState([]);
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchBookings();
+        }
+    }, [isAuthenticated]);
+
+    // Fetch services from backend API when tab changes
+    useEffect(() => {
+        if (activeTab !== 'recommended') {
+            fetchApiServices(activeTab);
+        }
+    }, [activeTab]);
+
+    const fetchApiServices = async (type) => {
+        try {
+            const res = await serviceAPI.getAll(type);
+            setApiServices(res.data.data || []);
+        } catch (err) {
+            console.error('Error fetching API services:', err);
+            setApiServices([]);
+        }
+    };
+
+    const fetchBookings = async () => {
+        try {
+            const res = await bookingAPI.getMyBookings();
+            setUserBookings(res.data.data.filter(b => b.status === 'active'));
+        } catch (error) {
+            console.error('Error fetching bookings:', error);
+        }
+    };
+
+    const handleConfirmBooking = async () => {
+        try {
+            await confirmBooking();
+            toast.success('Booking confirmed successfully!');
+            fetchBookings();
+        } catch (error) {
+            toast.error(error.message || 'Failed to book service');
+        }
+    };
+
+    const handleCancelBooking = async (bookingId) => {
+        if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+        try {
+            await cancelBooking(bookingId);
+            toast.success('Booking cancelled successfully');
+            fetchBookings();
+        } catch (error) {
+            toast.error('Failed to cancel booking');
+        }
+    };
 
     const currentTab = tabs.find((t) => t.key === activeTab);
+
+    // Merge: static data + API-created services (deduplicate by id)
+    const staticData = currentTab?.data || [];
+    const staticIds = new Set(staticData.map(s => s.id));
+    const mergedServices = [
+        ...staticData,
+        ...apiServices
+            .filter(s => !staticIds.has(s.id))
+            .map(s => ({
+                ...s,
+                // Flatten metadata fields for ServiceCard compatibility
+                route: s.metadata?.route || { from: s.metadata?.routeFrom, to: s.metadata?.routeTo },
+                city: s.metadata?.city || s.location,
+                starRating: s.metadata?.starRating,
+                reviewScore: s.rating,
+                difficulty: s.metadata?.difficulty,
+                region: s.metadata?.region,
+            }))
+    ];
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -37,8 +155,8 @@ const ServicesPage = () => {
                         Our Services
                     </h1>
                     <p className="text-lg md:text-xl text-primary-100 max-w-2xl mx-auto">
-                        Book buses, find the best hotels, and choose from curated trekking
-                        packages — all in one place.
+                        Book buses, find the best hotels, choose from curated trekking
+                        packages, and explore our recommended tours — all in one place.
                     </p>
                 </div>
             </section>
@@ -67,17 +185,51 @@ const ServicesPage = () => {
                         })}
                     </div>
 
-                    {/* Card Grid */}
-                    {currentTab && currentTab.data.length > 0 ? (
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {currentTab.data.map((service) => (
-                                <ServiceCard
-                                    key={service.id}
-                                    service={service}
-                                    type={activeTab}
-                                    onBookNow={handleBookNow}
-                                />
+                    {/* Content */}
+                    {activeTab === 'recommended' ? (
+                        /* Recommended Tours Grid */
+                        <div className="grid md:grid-cols-3 gap-8">
+                            {recommendedTours.map((tour, index) => (
+                                <div key={index} className="card hover:shadow-lg transition-shadow group p-0 overflow-hidden">
+                                    <div className="h-48 overflow-hidden relative">
+                                        <img src={tour.image} alt={tour.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold text-primary-600 shadow-sm">
+                                            {tour.price}
+                                        </div>
+                                    </div>
+                                    <div className="p-6">
+                                        <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">{tour.title}</h3>
+                                        <div className="flex items-center justify-between text-gray-600 mb-4">
+                                            <span className="flex items-center">
+                                                <HiMap className="w-4 h-4 mr-1 text-primary-500" />
+                                                <span className="text-sm">{tour.location}</span>
+                                            </span>
+                                            <span className="text-sm font-medium">{tour.days}</span>
+                                        </div>
+                                        <Link to="/trips" className="btn-secondary w-full flex items-center justify-center">
+                                            Explore Trips
+                                        </Link>
+                                    </div>
+                                </div>
                             ))}
+                        </div>
+                    ) : mergedServices.length > 0 ? (
+                        /* Service Cards Grid */
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {mergedServices.map((service) => {
+                                const userBooking = userBookings.find(b => b.serviceId === service.id && b.serviceType === activeTab);
+                                return (
+                                    <ServiceCard
+                                        key={service.id}
+                                        service={service}
+                                        type={activeTab}
+                                        onBookNow={handleBookNow}
+                                        userBooking={userBooking}
+                                        onCancelBooking={() => handleCancelBooking(userBooking.id)}
+                                        isAdmin={isAdmin}
+                                    />
+                                );
+                            })}
                         </div>
                     ) : (
                         <div className="text-center py-20">
@@ -92,7 +244,7 @@ const ServicesPage = () => {
                 <BookingModal
                     item={bookingItem}
                     onClose={closeModal}
-                    onConfirm={confirmBooking}
+                    onConfirm={handleConfirmBooking}
                 />
             )}
         </div>

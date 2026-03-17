@@ -18,6 +18,8 @@ const notificationRoutes = require('./notificationRoutes');
 const ratingRoutes = require('./ratingRoutes');
 const verificationRoutes = require('./verificationRoutes');
 const trekRoutes = require('./trekRoutes');
+const bookingRoutes = require('./bookingRoutes');
+const serviceRoutes = require('./serviceRoutes');
 
 // API health check
 router.get('/health', (req, res) => {
@@ -40,5 +42,7 @@ router.use('/notifications', notificationRoutes);
 router.use('/ratings', ratingRoutes);
 router.use('/verification', verificationRoutes);
 router.use('/treks', trekRoutes);
+router.use('/bookings', bookingRoutes);
+router.use('/services', serviceRoutes);
 
 module.exports = router;

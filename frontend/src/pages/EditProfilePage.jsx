@@ -121,8 +121,8 @@ const EditProfilePage = () => {
         formData.append('profilePicture', file);
 
         try {
-            const response = await userAPI.uploadProfilePicture(formData);
-            updateUser({ profile: { ...user.profile, profilePicture: response.data.data.profilePicture } });
+            await userAPI.uploadProfilePicture(formData);
+            await fetchCurrentUser();
             toast.success('Profile picture updated!');
         } catch (error) {
             toast.error('Failed to upload image');
@@ -141,7 +141,7 @@ const EditProfilePage = () => {
                         <div className="flex items-center space-x-6">
                             <div className="relative">
                                 <img
-                                    src={user?.profile?.profilePicture || `https://ui-avatars.com/api/?name=${formData.fullName}&size=128`}
+                                    src={(user?.profile?.profilePicture ? `${user.profile.profilePicture}?t=${Date.now()}` : null) || `https://ui-avatars.com/api/?name=${formData.fullName}&size=128`}
                                     alt="Profile"
                                     className="w-24 h-24 rounded-full object-cover"
                                 />

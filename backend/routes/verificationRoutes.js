@@ -12,9 +12,13 @@ const {
     rejectVerification
 } = require('../controllers/verificationController');
 const { protect, adminOnly } = require('../middleware/auth');
+const { upload } = require('../middleware/upload');
 
 // User Routes
-router.post('/submit', protect, submitVerification);
+router.post('/submit', protect, upload.fields([
+    { name: 'idFront', maxCount: 1 },
+    { name: 'selfie', maxCount: 1 }
+]), submitVerification);
 router.get('/me', protect, getMyVerification);
 
 // Admin Routes (Can be prefixed differently in index.js, but grouped here for now)

@@ -17,7 +17,9 @@ const {
     updateInterests,
     getAllInterests,
     getUserRatings,
-    blockUser
+    blockUser,
+    rateUser,
+    reportUser
 } = require('../controllers/userController');
 
 // Profile validation
@@ -57,5 +59,7 @@ router.put('/profile', profileValidation, validate, updateProfile);
 router.post('/profile/picture', upload.single('profilePicture'), uploadProfilePicture);
 router.put('/interests', updateInterests);
 router.post('/:id/block', blockUser);
+router.post('/:id/rate', rateUser);
+router.post('/:id/report', reportUser);
 
 module.exports = router;

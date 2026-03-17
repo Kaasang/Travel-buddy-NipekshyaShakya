@@ -137,6 +137,47 @@ const ProfilePage = () => {
                 </div>
             </div>
 
+            {/* KYC Verification Status */}
+            <div className="card mb-6">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            user?.verificationStatus === 'approved' ? 'bg-green-100' :
+                            user?.verificationStatus === 'pending_review' ? 'bg-yellow-100' :
+                            user?.verificationStatus === 'rejected' ? 'bg-red-100' : 'bg-gray-100'
+                        }`}>
+                            {user?.verificationStatus === 'approved' ? (
+                                <HiBadgeCheck className="w-6 h-6 text-green-500" />
+                            ) : user?.verificationStatus === 'pending_review' ? (
+                                <HiCalendar className="w-6 h-6 text-yellow-500" />
+                            ) : (
+                                <HiBadgeCheck className="w-6 h-6 text-gray-400" />
+                            )}
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-gray-900">Identity Verification</h3>
+                            <p className="text-sm text-gray-500">
+                                {user?.verificationStatus === 'approved' && 'Your identity has been verified'}
+                                {user?.verificationStatus === 'pending_review' && 'Your documents are under review'}
+                                {user?.verificationStatus === 'rejected' && 'Your verification was rejected'}
+                                {(!user?.verificationStatus || user?.verificationStatus === 'unverified') && 'Verify your identity to unlock all features'}
+                            </p>
+                        </div>
+                    </div>
+                    <div>
+                        {user?.verificationStatus === 'approved' ? (
+                            <span className="badge-success">Verified</span>
+                        ) : user?.verificationStatus === 'pending_review' ? (
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending Review</span>
+                        ) : user?.verificationStatus === 'rejected' ? (
+                            <Link to="/verify" className="btn-primary text-sm">Resubmit</Link>
+                        ) : (
+                            <Link to="/verify" className="btn-primary text-sm">Verify Now</Link>
+                        )}
+                    </div>
+                </div>
+            </div>
+
             {/* Tabs */}
             <div className="border-b border-gray-200 mb-6">
                 <nav className="flex space-x-8">

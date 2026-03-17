@@ -3,7 +3,7 @@
  * Handles admin-only operations like user management and statistics
  */
 
-const { User, Profile, Trip, Message, Report, Rating, Notification, sequelize } = require('../models');
+const { User, Profile, Trip, Message, Report, Rating, Notification, Booking, sequelize } = require('../models');
 const { asyncHandler, ApiError } = require('../middleware/errorHandler');
 const { Op } = require('sequelize');
 
@@ -314,6 +314,89 @@ const getAllTrips = asyncHandler(async (req, res) => {
     });
 });
 
+/**
+ * @desc    Get all bookings (admin view)
+ * @route   GET /api/admin/bookings
+ * @access  Admin
+ */
+const getAllBookings = asyncHandler(async (req, res) => {
+    const { page = 1, limit = 20, paymentStatus, status } = req.query;
+    const offset = (page - 1) * limit;
+
+    const where = {};
+    if (paymentStatus) where.paymentStatus = paymentStatus;
+    if (status) where.status = status;
+
+    const { count, rows: bookings } = await Booking.findAndCountAll({
+        where,
+        include: [{
+            model: User,
+            as: 'user',
+            include: [{ model: Profile, as: 'profile', attributes: ['fullName'] }],
+            attributes: ['id', 'email']
+        }],
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+        order: [['createdAt', 'DESC']]
+    });
+
+    res.json({
+        success: true,
+        data: {
+            bookings,
+            pagination: {
+                total: count,
+                page: parseInt(page),
+                pages: Math.ceil(count / limit)
+            }
+        }
+    });
+});
+
+/**
+ * @desc    Update booking payment status
+ * @route   PUT /api/admin/bookings/:id/payment
+ * @access  Admin
+ */
+const updatePaymentStatus = asyncHandler(async (req, res) => {
+    const { paymentStatus } = req.body; // 'completed' or 'failed'
+    const booking = await Booking.findByPk(req.params.id);
+
+    if (!booking) {
+        throw new ApiError('Booking not found', 404);
+    }
+
+    if (!['completed', 'failed'].includes(paymentStatus)) {
+        throw new ApiError('Invalid payment status update', 400);
+    }
+
+    booking.paymentStatus = paymentStatus;
+    
+    // Auto-confirm booking if payment is completed
+    if (paymentStatus === 'completed') {
+        booking.status = 'active'; // In our schema 'active' acts as confirmed/ongoing
+    }
+
+    await booking.save();
+
+    // Send notification to user
+    await Notification.create({
+        userId: booking.userId,
+        type: 'booking',
+        title: paymentStatus === 'completed' ? 'Payment Approved' : 'Payment Rejected',
+        message: paymentStatus === 'completed' 
+            ? `Your payment for ${booking.serviceTitle} was approved and your booking is confirmed.` 
+            : `Your payment for ${booking.serviceTitle} could not be verified. Please try again or contact support.`,
+        link: '/my-activity'
+    });
+
+    res.json({
+        success: true,
+        message: 'Payment status updated successfully',
+        data: booking
+    });
+});
+
 module.exports = {
     getStats,
     getAllUsers,
@@ -321,5 +404,7 @@ module.exports = {
     deleteUser,
     getReports,
     resolveReport,
-    getAllTrips
+    getAllTrips,
+    getAllBookings,
+    updatePaymentStatus
 };

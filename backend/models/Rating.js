@@ -32,7 +32,7 @@ const Rating = sequelize.define('Rating', {
     },
     tripId: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
         field: 'trip_id',
         references: {
             model: 'trips',

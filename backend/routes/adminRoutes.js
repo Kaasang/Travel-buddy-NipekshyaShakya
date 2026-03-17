@@ -13,7 +13,9 @@ const {
     deleteUser,
     getReports,
     resolveReport,
-    getAllTrips
+    getAllTrips,
+    getAllBookings,
+    updatePaymentStatus
 } = require('../controllers/adminController');
 
 // All routes require admin access
@@ -34,5 +36,9 @@ router.put('/reports/:id', resolveReport);
 
 // Trip management
 router.get('/trips', getAllTrips);
+
+// Booking management
+router.get('/bookings', getAllBookings);
+router.put('/bookings/:id/payment', updatePaymentStatus);
 
 module.exports = router;

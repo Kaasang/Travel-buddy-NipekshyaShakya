@@ -65,13 +65,13 @@ export const userAPI = {
     getUsers: (params) => api.get('/users', { params }),
     getUser: (id) => api.get(`/users/${id}`),
     updateProfile: (data) => api.put('/users/profile', data),
-    uploadProfilePicture: (formData) => api.post('/users/profile/picture', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-    }),
+    uploadProfilePicture: (formData) => api.post('/users/profile/picture', formData),
     updateInterests: (interestIds) => api.put('/users/interests', { interestIds }),
     getAllInterests: () => api.get('/users/interests/all'),
     getUserRatings: (id) => api.get(`/users/${id}/ratings`),
-    blockUser: (id) => api.post(`/users/${id}/block`)
+    blockUser: (id) => api.post(`/users/${id}/block`),
+    rateUser: (id, data) => api.post(`/users/${id}/rate`, data),
+    reportUser: (id, data) => api.post(`/users/${id}/report`, data)
 };
 
 // ==========================================
@@ -80,7 +80,9 @@ export const userAPI = {
 export const tripAPI = {
     getTrips: (params) => api.get('/trips', { params }),
     getTrip: (id) => api.get(`/trips/${id}`),
-    createTrip: (data) => api.post('/trips', data),
+    createTrip: (data) => api.post('/trips', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
     updateTrip: (id, data) => api.put(`/trips/${id}`, data),
     deleteTrip: (id) => api.delete(`/trips/${id}`),
     joinTrip: (id) => api.post(`/trips/${id}/join`),
@@ -96,6 +98,20 @@ export const matchAPI = {
     getMatches: (params) => api.get('/matches', { params }),
     getMatchWithUser: (userId) => api.get(`/matches/${userId}`),
     getSuggestions: () => api.get('/matches/suggestions')
+};
+
+// ==========================================
+// Booking API
+// ==========================================
+export const bookingAPI = {
+    createBooking: (data) => api.post('/bookings', data),
+    getMyBookings: () => api.get('/bookings/me'),
+    cancelBooking: (id) => api.put(`/bookings/${id}/cancel`),
+    uploadPaymentReceipt: (id, formData) => api.post(`/bookings/${id}/pay`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    })
 };
 
 // ==========================================
@@ -139,6 +155,17 @@ export const ratingAPI = {
 };
 
 // ==========================================
+// Service API
+// ==========================================
+export const serviceAPI = {
+    getAll: (type) => api.get('/services', { params: type ? { type } : {} }),
+    getById: (id) => api.get(`/services/${id}`),
+    create: (data) => api.post('/services', data),
+    update: (id, data) => api.put(`/services/${id}`, data),
+    remove: (id) => api.delete(`/services/${id}`)
+};
+
+// ==========================================
 // Admin API
 // ==========================================
 export const adminAPI = {
@@ -148,7 +175,9 @@ export const adminAPI = {
     deleteUser: (id) => api.delete(`/admin/users/${id}`),
     getReports: (params) => api.get('/admin/reports', { params }),
     resolveReport: (id, data) => api.put(`/admin/reports/${id}`, data),
-    getAllTrips: (params) => api.get('/admin/trips', { params })
+    getAllTrips: (params) => api.get('/admin/trips', { params }),
+    getAllBookings: (params) => api.get('/admin/bookings', { params }),
+    updateBookingPaymentStatus: (id, data) => api.put(`/admin/bookings/${id}/payment`, data)
 };
 
 export default api;

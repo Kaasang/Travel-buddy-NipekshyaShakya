@@ -28,6 +28,16 @@ const Navbar = () => {
         if (isAuthenticated) {
             fetchUnreadCount();
         }
+
+        // Listen for booking confirmation events to update badge
+        const handleBookingConfirmed = () => {
+            fetchUnreadCount();
+        };
+        window.addEventListener('bookingConfirmed', handleBookingConfirmed);
+
+        return () => {
+            window.removeEventListener('bookingConfirmed', handleBookingConfirmed);
+        };
     }, [isAuthenticated, location.pathname]);
 
     const fetchUnreadCount = async () => {
@@ -53,9 +63,7 @@ const Navbar = () => {
         { name: 'Find Buddies', path: '/find-buddies', icon: HiUsers },
         { name: 'Trips', path: '/trips', icon: HiMap },
         { name: 'Services', path: '/services', icon: HiTruck },
-        { name: 'Recommendations', path: '/recommendations', icon: HiGlobe },
-        { name: 'Blog', path: '/blog', icon: HiBookOpen },
-        { name: 'Messages', path: '/messages', icon: HiChat },
+        { name: 'Blog', path: '/blog', icon: HiBookOpen }
     ] : [
         { name: 'Home', path: '/', icon: HiHome },
         { name: 'Find Buddies', path: '/find-buddies', icon: HiUsers },
@@ -71,9 +79,11 @@ const Navbar = () => {
                 <div className="flex justify-between items-center h-16">
                     {/* Logo */}
                     <Link to={isAuthenticated ? '/dashboard' : '/'} className="flex items-center space-x-2">
-                        <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
-                            <span className="text-white font-bold text-xl">TB</span>
-                        </div>
+                        <img
+                            src="/images/logo.png"
+                            alt="Travel Buddy Nepal"
+                            className="h-10 w-auto object-contain"
+                        />
                         <span className="font-bold text-xl text-gray-900">Travel Buddy</span>
                     </Link>
 
@@ -98,6 +108,15 @@ const Navbar = () => {
                     <div className="hidden md:flex items-center space-x-4">
                         {isAuthenticated ? (
                             <>
+                                {/* Messages Icon */}
+                                <Link
+                                    to="/messages"
+                                    className="p-2 text-gray-600 hover:text-primary-600 relative me-1"
+                                    title="Messages"
+                                >
+                                    <HiChat className="w-6 h-6" />
+                                </Link>
+
                                 {/* Notifications */}
                                 <Link to="/notifications" className="p-2 text-gray-600 hover:text-primary-600 relative">
                                     <HiBell className="w-6 h-6" />
@@ -116,7 +135,7 @@ const Navbar = () => {
                                         className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
                                     >
                                         <img
-                                            src={user?.profile?.profilePicture || '/uploads/default-avatar.png'}
+                                            src={user?.profile?.profilePicture ? `${user.profile.profilePicture}?t=${Date.now()}` : '/uploads/default-avatar.png'}
                                             alt={user?.profile?.fullName}
                                             className="w-8 h-8 rounded-full object-cover bg-gray-200"
                                             onError={(e) => { e.target.src = 'https://ui-avatars.com/api/?name=' + (user?.profile?.fullName || 'User'); }}
@@ -142,6 +161,14 @@ const Navbar = () => {
                                             >
                                                 <HiUser className="w-5 h-5" />
                                                 <span>My Profile</span>
+                                            </Link>
+                                            <Link
+                                                to="/my-activity"
+                                                onClick={() => setShowDropdown(false)}
+                                                className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                                            >
+                                                <HiMap className="w-5 h-5" />
+                                                <span>My Bookings & Trips</span>
                                             </Link>
                                             <Link
                                                 to="/profile/edit"

@@ -35,6 +35,7 @@ const VerificationPage = () => {
         selfie: null,
         consent: false
     });
+    const [previews, setPreviews] = useState({ idFront: null, selfie: null });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Fetch actual verification request status on mount
@@ -82,9 +83,10 @@ const VerificationPage = () => {
     const handleFileChange = (e) => {
         const { name, files } = e.target;
         if (files && files[0]) {
-            // Store fake URL for mock purposes instead of actual File object
-            const fakeUrl = URL.createObjectURL(files[0]);
-            setFormData(prev => ({ ...prev, [name]: fakeUrl }));
+            // Store actual File object for upload
+            setFormData(prev => ({ ...prev, [name]: files[0] }));
+            // Create preview URL for display
+            setPreviews(prev => ({ ...prev, [name]: URL.createObjectURL(files[0]) }));
         }
     };
 
@@ -100,17 +102,22 @@ const VerificationPage = () => {
         setIsSubmitting(true);
         
         try {
-            await api.post('/verification/submit', {
-                ...formData,
-                idFrontUrl: formData.idFront,
-                selfieUrl: formData.selfie
+            const submitData = new FormData();
+            submitData.append('personalDetails', JSON.stringify(formData.personalDetails));
+            submitData.append('idDocType', formData.idDocType);
+            submitData.append('idDocNumber', formData.idDocNumber);
+            if (formData.idFront) submitData.append('idFront', formData.idFront);
+            if (formData.selfie) submitData.append('selfie', formData.selfie);
+
+            await api.post('/verification/submit', submitData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
             
             toast.success('Verification submitted successfully!');
             await fetchCurrentUser(); // Refresh user context
             setStatus('pending_review');
         } catch (error) {
-            toast.error('Failed to submit verification request');
+            toast.error(error.response?.data?.message || 'Failed to submit verification request');
         } finally {
             setIsSubmitting(false);
         }
@@ -299,9 +306,9 @@ const VerificationPage = () => {
                                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 transition-colors">
                                     <input type="file" name="idFront" id="idFront" accept="image/jpeg, image/png" required={!formData.idFront} onChange={handleFileChange} className="hidden" />
                                     <label htmlFor="idFront" className="cursor-pointer flex flex-col items-center">
-                                        {formData.idFront ? (
+                                        {previews.idFront ? (
                                             <div className="relative group">
-                                                <img src={formData.idFront} alt="ID Preview" className="h-32 object-cover rounded shadow-sm" />
+                                                <img src={previews.idFront} alt="ID Preview" className="h-32 object-cover rounded shadow-sm" />
                                                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded">
                                                     <span className="text-white text-sm font-medium">Change Image</span>
                                                 </div>
@@ -337,9 +344,9 @@ const VerificationPage = () => {
                                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 transition-colors">
                                     <input type="file" name="selfie" id="selfie" accept="image/jpeg, image/png, image/webp" capture="user" required={!formData.selfie} onChange={handleFileChange} className="hidden" />
                                     <label htmlFor="selfie" className="cursor-pointer flex flex-col items-center">
-                                        {formData.selfie ? (
+                                        {previews.selfie ? (
                                             <div className="relative group">
-                                                <img src={formData.selfie} alt="Selfie Preview" className="h-32 w-32 object-cover rounded-full shadow-sm" />
+                                                <img src={previews.selfie} alt="Selfie Preview" className="h-32 w-32 object-cover rounded-full shadow-sm" />
                                                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
                                                     <span className="text-white text-sm font-medium w-full text-center">Change</span>
                                                 </div>

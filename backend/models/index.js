@@ -16,6 +16,8 @@ const Rating = require('./Rating');
 const Notification = require('./Notification');
 const VerificationRequest = require('./VerificationRequest');
 const Trek = require('./Trek');
+const Booking = require('./Booking');
+const Service = require('./Service');
 
 // ==========================================
 // Define Model Associations
@@ -43,6 +45,10 @@ Interest.belongsToMany(User, {
     foreignKey: 'interestId',
     as: 'users'
 });
+
+// User & Bookings
+User.hasMany(Booking, { foreignKey: 'userId', as: 'bookings', onDelete: 'CASCADE' });
+Booking.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
 // User - Trip (One to Many - creator)
 User.hasMany(Trip, {
@@ -162,7 +168,9 @@ Rating.belongsTo(User, {
 // Trip - Rating
 Trip.hasMany(Rating, {
     foreignKey: 'tripId',
-    as: 'ratings'
+    as: 'ratings',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
 });
 Rating.belongsTo(Trip, {
     foreignKey: 'tripId'
@@ -223,5 +231,7 @@ module.exports = {
     Rating,
     Notification,
     VerificationRequest,
-    Trek
+    Trek,
+    Booking,
+    Service
 };

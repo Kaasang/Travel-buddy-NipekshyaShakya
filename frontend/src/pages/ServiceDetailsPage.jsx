@@ -13,6 +13,9 @@ import {
 import { getServiceById } from '../data/servicesData';
 import BookingModal from '../components/BookingModal';
 import useBooking from '../hooks/useBooking';
+import { useAuth } from '../context/AuthContext';
+import { bookingAPI, serviceAPI } from '../services/api';
+import toast from 'react-hot-toast';
 
 const TABS = {
     bus: ['Overview', 'Amenities', 'Policies', 'Reviews'],
@@ -26,22 +29,118 @@ const ServiceDetailsPage = () => {
     const [service, setService] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('Overview');
-    const { handleBookNow, bookingItem, showModal, closeModal, confirmBooking } = useBooking();
+    const { handleBookNow, bookingItem, showModal, closeModal, confirmBooking, cancelBooking } = useBooking();
+    const { isAuthenticated, isAdmin } = useAuth();
+    const [userBooking, setUserBooking] = useState(null);
+    const [actionLoading, setActionLoading] = useState(false);
 
     useEffect(() => {
-        setLoading(true);
-        const delay = 300 + Math.random() * 300;
-        const timeout = setTimeout(() => {
+        const loadService = async () => {
+            setLoading(true);
+            // Try static data first
             const found = getServiceById(type, id);
-            setService(found);
-            setLoading(false);
-        }, delay);
-        return () => clearTimeout(timeout);
+            if (found) {
+                setService(found);
+                setLoading(false);
+                return;
+            }
+            // Fallback to API (for admin-created services)
+            try {
+                const res = await serviceAPI.getById(id);
+                const svc = res.data.data;
+                if (svc) {
+                    // Flatten metadata for UI compatibility
+                    setService({
+                        ...svc,
+                        route: svc.metadata?.route || { from: svc.metadata?.routeFrom, to: svc.metadata?.routeTo },
+                        city: svc.metadata?.city || svc.location,
+                        starRating: svc.metadata?.starRating,
+                        reviewScore: svc.rating,
+                        difficulty: svc.metadata?.difficulty,
+                        region: svc.metadata?.region,
+                        maxAltitude: svc.metadata?.maxAltitude,
+                        bestSeason: svc.metadata?.bestSeason,
+                        groupSize: svc.metadata?.groupSize,
+                        busType: svc.metadata?.busType,
+                        seatsAvailable: svc.metadata?.seatsAvailable,
+                        amenities: svc.metadata?.amenities || [],
+                        itinerary: svc.metadata?.itinerary || [],
+                        inclusions: svc.metadata?.inclusions || [],
+                        exclusions: svc.metadata?.exclusions || [],
+                        packingList: svc.metadata?.packingList || [],
+                        budgetBreakdown: svc.metadata?.budgetBreakdown || {},
+                        roomTypes: svc.metadata?.roomTypes || [],
+                        nearbyHighlights: svc.metadata?.nearbyHighlights || [],
+                        policies: svc.metadata?.policies || [],
+                        checkIn: svc.metadata?.checkIn,
+                        checkOut: svc.metadata?.checkOut,
+                        departureTime: svc.metadata?.departureTime || [],
+                        pickup: svc.metadata?.pickup || [],
+                        drop: svc.metadata?.drop || [],
+                        cancellation: svc.metadata?.cancellation || '',
+                    });
+                }
+            } catch (err) {
+                console.error('Service not found:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadService();
     }, [type, id]);
 
     useEffect(() => {
         setActiveTab('Overview');
     }, [type, id]);
+
+    // Check if user has already booked this service
+    useEffect(() => {
+        if (isAuthenticated && service) {
+            checkBookingStatus();
+        }
+    }, [isAuthenticated, service]);
+
+    const checkBookingStatus = async () => {
+        try {
+            const response = await bookingAPI.getMyBookings();
+            const bookings = response.data.data;
+            const activeBooking = bookings.find(b => 
+                b.serviceId === service.id && b.serviceType === type && b.status === 'active'
+            );
+            setUserBooking(activeBooking || null);
+        } catch (error) {
+            console.error('Failed to fetch booking status', error);
+        }
+    };
+
+    const handleConfirmBooking = async () => {
+        setActionLoading(true);
+        try {
+            await confirmBooking();
+            toast.success('Booking confirmed successfully!');
+            await checkBookingStatus(); // refresh status
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to confirm booking');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleCancelBooking = async () => {
+        if (!userBooking) return;
+        if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+        
+        setActionLoading(true);
+        try {
+            await cancelBooking(userBooking.id);
+            toast.success('Booking cancelled successfully');
+            setUserBooking(null); // Clear active booking
+        } catch (error) {
+            toast.error('Failed to cancel booking');
+        } finally {
+            setActionLoading(false);
+        }
+    };
 
     /* ── Loading skeleton ──────────────────────── */
     if (loading) {
@@ -445,17 +544,54 @@ const ServiceDetailsPage = () => {
                                 <p className="text-xs text-gray-400 -mt-3 mb-4">per person</p>
                             )}
 
-                            <button
-                                onClick={() => handleBookNow(service, type)}
-                                className="btn-primary w-full py-3 text-base flex items-center justify-center gap-2"
-                            >
-                                Book Now
-                                <HiArrowRight className="w-4 h-4" />
-                            </button>
+                            {!isAdmin && (
+                                <>
+                                    {userBooking?.paymentStatus === 'completed' ? (
+                                        <button
+                                            disabled
+                                            className="btn w-full py-3 text-base flex items-center justify-center gap-2 bg-green-50 text-green-700 border border-green-200 cursor-default"
+                                        >
+                                            <HiCheckCircle className="w-5 h-5" />
+                                            Payment Completed
+                                        </button>
+                                    ) : userBooking?.paymentStatus === 'failed' ? (
+                                        <button
+                                            disabled
+                                            className="btn w-full py-3 text-base flex items-center justify-center gap-2 bg-orange-50 text-orange-700 border border-orange-200 cursor-default"
+                                        >
+                                            <HiXCircle className="w-5 h-5" />
+                                            Payment Rejected
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => userBooking ? handleCancelBooking() : handleBookNow(service, type)}
+                                            disabled={actionLoading}
+                                            className={`btn w-full py-3 text-base flex items-center justify-center gap-2 ${
+                                                userBooking 
+                                                ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200' 
+                                                : 'btn-primary'
+                                            }`}
+                                        >
+                                            {actionLoading ? 'Processing...' : userBooking ? 'Cancel Booking' : 'Book Now'}
+                                            {!userBooking && !actionLoading && <HiArrowRight className="w-4 h-4" />}
+                                        </button>
+                                    )}
 
-                            <p className="text-xs text-gray-400 text-center mt-3">
-                                No payment required now. Secure your spot!
-                            </p>
+                                    {userBooking?.paymentStatus === 'completed' ? (
+                                        <p className="text-xs text-green-600 text-center mt-3 font-medium">
+                                            Your payment has been verified. Enjoy your trip!
+                                        </p>
+                                    ) : userBooking?.paymentStatus === 'failed' ? (
+                                        <p className="text-xs text-orange-600 text-center mt-3 font-medium">
+                                            Your payment was rejected. Please contact support.
+                                        </p>
+                                    ) : (
+                                        <p className="text-xs text-gray-400 text-center mt-3">
+                                            No payment required now. Secure your spot!
+                                        </p>
+                                    )}
+                                </>
+                            )}
 
                             {service.seatsAvailable && (
                                 <p className="text-center mt-3 text-sm text-green-600 font-medium">
@@ -473,13 +609,36 @@ const ServiceDetailsPage = () => {
                     <p className="text-xs text-gray-400">From</p>
                     <p className="text-xl font-bold text-primary-600">NPR {service.price?.toLocaleString()}</p>
                 </div>
-                <button
-                    onClick={() => handleBookNow(service, type)}
-                    className="btn-primary px-8 py-3 flex items-center gap-2"
-                >
-                    Book Now
-                    <HiArrowRight className="w-4 h-4" />
-                </button>
+                {userBooking?.paymentStatus === 'completed' ? (
+                    <button
+                        disabled
+                        className="px-8 py-3 flex items-center gap-2 font-semibold rounded-lg bg-green-50 text-green-700 border border-green-200 cursor-default"
+                    >
+                        <HiCheckCircle className="w-5 h-5" />
+                        Paid ✓
+                    </button>
+                ) : userBooking?.paymentStatus === 'failed' ? (
+                    <button
+                        disabled
+                        className="px-8 py-3 flex items-center gap-2 font-semibold rounded-lg bg-orange-50 text-orange-700 border border-orange-200 cursor-default"
+                    >
+                        <HiXCircle className="w-5 h-5" />
+                        Rejected
+                    </button>
+                ) : (
+                    <button
+                        onClick={() => userBooking ? handleCancelBooking() : handleBookNow(service, type)}
+                        disabled={actionLoading}
+                        className={`px-8 py-3 flex items-center gap-2 transition-colors font-semibold rounded-lg ${
+                            userBooking 
+                            ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200' 
+                            : 'btn-primary'
+                        }`}
+                    >
+                        {actionLoading ? 'Wait...' : userBooking ? 'Cancel' : 'Book Now'}
+                        {!userBooking && !actionLoading && <HiArrowRight className="w-4 h-4" />}
+                    </button>
+                )}
             </div>
 
             {/* Spacer for mobile bottom bar */}
@@ -490,7 +649,8 @@ const ServiceDetailsPage = () => {
                 <BookingModal
                     item={bookingItem}
                     onClose={closeModal}
-                    onConfirm={confirmBooking}
+                    onConfirm={handleConfirmBooking}
+                    loading={actionLoading}
                 />
             )}
         </div>

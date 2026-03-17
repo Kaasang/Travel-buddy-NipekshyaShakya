@@ -8,6 +8,7 @@ const router = express.Router();
 const { body } = require('express-validator');
 const { validate } = require('../middleware/validate');
 const { protect } = require('../middleware/auth');
+const { upload } = require('../middleware/upload');
 const {
     createTrip,
     getTrips,
@@ -50,7 +51,7 @@ router.use(protect);
 // Routes
 router.route('/')
     .get(getTrips)
-    .post(tripValidation, validate, createTrip);
+    .post(upload.single('coverImage'), tripValidation, validate, createTrip);
 
 router.get('/my', getMyTrips);
 

@@ -22,7 +22,7 @@ const Notification = sequelize.define('Notification', {
         }
     },
     type: {
-        type: DataTypes.ENUM('match', 'message', 'trip_request', 'trip_update', 'rating', 'system'),
+        type: DataTypes.ENUM('match', 'message', 'trip_request', 'trip_update', 'rating', 'system', 'booking'),
         allowNull: false
     },
     title: {

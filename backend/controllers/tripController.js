@@ -24,6 +24,8 @@ const createTrip = asyncHandler(async (req, res) => {
     }
 
     // Create trip
+    const coverImage = req.file ? `/uploads/trips/${req.file.filename}` : undefined;
+
     const trip = await Trip.create({
         creatorId: req.user.id,
         title,
@@ -35,7 +37,8 @@ const createTrip = asyncHandler(async (req, res) => {
         maxGroupSize: maxGroupSize || 5,
         description,
         isPublic: isPublic !== undefined ? isPublic : true,
-        currentMembers: 1
+        currentMembers: 1,
+        ...(coverImage && { coverImage })
     });
 
     // Add creator as trip member
@@ -233,6 +236,11 @@ const joinTrip = asyncHandler(async (req, res) => {
     // Check if trip is open
     if (trip.status !== 'open') {
         throw new ApiError('This trip is not accepting new members', 400);
+    }
+
+    // Admins cannot join trips
+    if (req.user.role === 'admin') {
+        throw new ApiError('Admins cannot join trips', 403);
     }
 
     // Check if trip is full

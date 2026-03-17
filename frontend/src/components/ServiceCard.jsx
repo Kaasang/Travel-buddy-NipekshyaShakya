@@ -3,9 +3,9 @@
  */
 
 import { Link } from 'react-router-dom';
-import { HiStar, HiLocationMarker, HiClock, HiArrowRight } from 'react-icons/hi';
+import { HiStar, HiLocationMarker, HiClock, HiArrowRight, HiCheckCircle, HiXCircle } from 'react-icons/hi';
 
-const ServiceCard = ({ service, type, onBookNow }) => {
+const ServiceCard = ({ service, type, onBookNow, userBooking, onCancelBooking, isAdmin }) => {
     const detailPath = `/services/${type}/${service.id}`;
 
     const typeExtra = () => {
@@ -90,17 +90,46 @@ const ServiceCard = ({ service, type, onBookNow }) => {
                 <div className="flex gap-3">
                     <Link
                         to={detailPath}
-                        className="btn-secondary flex-1 text-center text-sm py-2"
+                        className={`btn-secondary text-center text-sm py-2 ${isAdmin ? 'w-full' : 'flex-1'}`}
                     >
                         View Details
                     </Link>
-                    <button
-                        onClick={() => onBookNow(service, type)}
-                        className="btn-primary flex-1 text-sm py-2 flex items-center justify-center gap-1"
-                    >
-                        Book Now
-                        <HiArrowRight className="w-4 h-4" />
-                    </button>
+                    {!isAdmin && (
+                        <>
+                            {userBooking?.paymentStatus === 'completed' ? (
+                                <button
+                                    disabled
+                                    className="bg-green-50 text-green-700 font-semibold border border-green-200 rounded-lg flex-1 text-sm py-2 flex items-center justify-center gap-1 cursor-default"
+                                >
+                                    <HiCheckCircle className="w-4 h-4" />
+                                    Payment Completed
+                                </button>
+                            ) : userBooking?.paymentStatus === 'failed' ? (
+                                <button
+                                    disabled
+                                    className="bg-orange-50 text-orange-700 font-semibold border border-orange-200 rounded-lg flex-1 text-sm py-2 flex items-center justify-center gap-1 cursor-default"
+                                >
+                                    <HiXCircle className="w-4 h-4" />
+                                    Payment Rejected
+                                </button>
+                            ) : userBooking ? (
+                                <button
+                                    onClick={onCancelBooking}
+                                    className="bg-red-50 text-red-600 hover:bg-red-100 font-semibold border border-red-200 rounded-lg flex-1 text-sm py-2 flex items-center justify-center gap-1 transition-colors"
+                                >
+                                    Cancel Booking
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => onBookNow(service, type)}
+                                    className="btn-primary flex-1 text-sm py-2 flex items-center justify-center gap-1"
+                                >
+                                    Book Now
+                                    <HiArrowRight className="w-4 h-4" />
+                                </button>
+                            )}
+                        </>
+                    )}
                 </div>
             </div>
         </div>

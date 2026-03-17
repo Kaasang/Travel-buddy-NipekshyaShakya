@@ -12,7 +12,7 @@ const { asyncHandler, ApiError } = require('../middleware/errorHandler');
  * @access  Private
  */
 const submitVerification = asyncHandler(async (req, res) => {
-    const { personalDetails, idDocType, idDocNumber, idFrontUrl, idBackUrl, selfieUrl } = req.body;
+    const { personalDetails, idDocType, idDocNumber } = req.body;
     const userId = req.user.id;
 
     // Check if user already has a pending or approved request
@@ -24,15 +24,22 @@ const submitVerification = asyncHandler(async (req, res) => {
         throw new ApiError('You already have a pending or approved verification request', 400);
     }
 
+    // Get file paths from multer uploads
+    const idFrontFile = req.files?.idFront?.[0];
+    const selfieFile = req.files?.selfie?.[0];
+
+    const idFrontUrl = idFrontFile ? `/uploads/verification/${idFrontFile.filename}` : '/mock-path/front.jpg';
+    const selfieUrl = selfieFile ? `/uploads/verification/${selfieFile.filename}` : '/mock-path/selfie.jpg';
+
     // Create the verification request
     const verification = await VerificationRequest.create({
         userId,
         personalDetails: typeof personalDetails === 'string' ? JSON.parse(personalDetails) : personalDetails,
         idDocType,
         idDocNumber,
-        idFrontUrl: idFrontUrl || '/mock-path/front.jpg', // Fallback for testing
-        idBackUrl: idBackUrl || null,
-        selfieUrl: selfieUrl || '/mock-path/selfie.jpg' // Fallback for testing
+        idFrontUrl,
+        idBackUrl: null,
+        selfieUrl
     });
 
     // Update User status to pending_review

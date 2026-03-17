@@ -3,7 +3,7 @@
  * Handles user management operations
  */
 
-const { User, Profile, Interest, UserInterest, Trip, Rating } = require('../models');
+const { User, Profile, Interest, UserInterest, Trip, Rating, Report } = require('../models');
 const { asyncHandler, ApiError } = require('../middleware/errorHandler');
 const { Op } = require('sequelize');
 
@@ -259,6 +259,48 @@ const blockUser = asyncHandler(async (req, res) => {
     });
 });
 
+const rateUser = asyncHandler(async (req, res) => {
+    const { rating, review, tripId } = req.body;
+    
+    // Check if user exists
+    const ratedUser = await User.findByPk(req.params.id);
+    if (!ratedUser) throw new ApiError('User not found', 404);
+    if (ratedUser.id === req.user.id) throw new ApiError('Cannot rate yourself', 400);
+
+    const newRating = await Rating.create({
+        raterId: req.user.id,
+        ratedUserId: req.params.id,
+        tripId: tripId || null,
+        rating,
+        review
+    });
+
+    // Update user average rating
+    const allRatings = await Rating.findAll({ where: { ratedUserId: req.params.id } });
+    const avgRating = allRatings.reduce((sum, r) => sum + r.rating, 0) / allRatings.length;
+    await Profile.update(
+        { averageRating: avgRating.toFixed(1), totalRatings: allRatings.length },
+        { where: { userId: req.params.id } }
+    );
+
+    res.status(201).json({ success: true, message: 'Rating submitted', data: newRating });
+});
+
+const reportUser = asyncHandler(async (req, res) => {
+    const { reportType, description } = req.body;
+    
+    if (req.params.id == req.user.id) throw new ApiError('Cannot report yourself', 400);
+
+    const report = await Report.create({
+        reporterId: req.user.id,
+        reportedUserId: req.params.id,
+        reportType: reportType || 'other',
+        description
+    });
+
+    res.status(201).json({ success: true, message: 'User reported successfully', data: report });
+});
+
 module.exports = {
     getUsers,
     getUser,
@@ -267,5 +309,7 @@ module.exports = {
     updateInterests,
     getAllInterests,
     getUserRatings,
-    blockUser
+    blockUser,
+    rateUser,
+    reportUser
 };

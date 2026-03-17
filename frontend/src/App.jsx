@@ -24,9 +24,9 @@ import CreateTripPage from './pages/CreateTripPage';
 import MatchesPage from './pages/MatchesPage';
 import MessagesPage from './pages/MessagesPage';
 import UserProfilePage from './pages/UserProfilePage';
+import MyActivityPage from './pages/MyActivityPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import VerificationsAdminPage from './pages/admin/VerificationsAdminPage';
-import RecommendationsPage from './pages/RecommendationsPage';
 import BlogPage from './pages/BlogPage';
 import BlogDetailsPage from './pages/BlogDetailsPage';
 import AboutContactPage from './pages/AboutContactPage';
@@ -145,6 +145,11 @@ function AppRoutes() {
                     <Layout><NotificationsPage /></Layout>
                 </ProtectedRoute>
             } />
+            <Route path="/my-activity" element={
+                <ProtectedRoute>
+                    <Layout><MyActivityPage /></Layout>
+                </ProtectedRoute>
+            } />
             <Route path="/verify" element={
                 <ProtectedRoute>
                     <Layout><VerificationPage /></Layout>
@@ -165,11 +170,7 @@ function AppRoutes() {
                     <Layout><UserProfilePage /></Layout>
                 </ProtectedRoute>
             } />
-            <Route path="/recommendations" element={
-                <ProtectedRoute>
-                    <Layout><RecommendationsPage /></Layout>
-                </ProtectedRoute>
-            } />
+            <Route path="/recommendations" element={<Navigate to="/services" replace />} />
             <Route path="/blog" element={
                 <ProtectedRoute>
                     <Layout><BlogPage /></Layout>
@@ -205,6 +206,11 @@ function AppRoutes() {
                 </ProtectedRoute>
             } />
             <Route path="/messages/:userId" element={
+                <ProtectedRoute>
+                    <Layout showFooter={false}><MessagesPage /></Layout>
+                </ProtectedRoute>
+            } />
+            <Route path="/messages/trip/:tripId" element={
                 <ProtectedRoute>
                     <Layout showFooter={false}><MessagesPage /></Layout>
                 </ProtectedRoute>

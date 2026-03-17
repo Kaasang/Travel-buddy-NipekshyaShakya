@@ -30,7 +30,7 @@ const RecommendationsPage = () => {
                         location: 'Phewa Lake, Pokhara',
                         days: '7 Days',
                         price: 'Rs. 25,000',
-                        image: '/images/tripp/Pokhara_Valley.jpg'
+                        image: '/images/recommend/ppokhara.jpg'
                     },
                     {
                         title: 'Chitwan Jungle Safari',

@@ -6,8 +6,10 @@ import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { adminAPI, userAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
-import { HiUsers, HiMap, HiFlag, HiChartBar, HiCheck, HiBan, HiTrash, HiShieldCheck, HiUser, HiCamera } from 'react-icons/hi';
+import { HiUsers, HiMap, HiFlag, HiChartBar, HiCheck, HiBan, HiTrash, HiShieldCheck, HiUser, HiCamera, HiCreditCard, HiTruck } from 'react-icons/hi';
 import VerificationsAdminPage from './VerificationsAdminPage';
+import AdminBookingsPage from './AdminBookingsPage';
+import AdminServicesPage from './AdminServicesPage';
 
 // Stats Component
 const Stats = () => {
@@ -187,7 +189,9 @@ const AdminDashboard = () => {
         { path: '/admin', icon: HiChartBar, label: 'Overview' },
         { path: '/admin/users', icon: HiUsers, label: 'Users' },
         { path: '/admin/verifications', icon: HiShieldCheck, label: 'Verifications' },
+        { path: '/admin/services', icon: HiTruck, label: 'Services' },
         { path: '/admin/reports', icon: HiFlag, label: 'Reports' },
+        { path: '/admin/bookings', icon: HiCreditCard, label: 'Bookings' },
         { path: '/admin/profile', icon: HiUser, label: 'Profile' },
     ];
 
@@ -210,7 +214,9 @@ const AdminDashboard = () => {
                 <Route path="/" element={<><Stats /><div className="grid md:grid-cols-2 gap-6"><UsersManagement /><ReportsManagement /></div></>} />
                 <Route path="/users" element={<UsersManagement />} />
                 <Route path="/verifications" element={<VerificationsAdminPage />} />
+                <Route path="/services" element={<AdminServicesPage />} />
                 <Route path="/reports" element={<ReportsManagement />} />
+                <Route path="/bookings" element={<AdminBookingsPage />} />
                 <Route path="/profile" element={<AdminProfile />} />
             </Routes>
         </div>

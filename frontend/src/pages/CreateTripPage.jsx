@@ -1,17 +1,20 @@
 /**
  * Create Trip Page
- * Form to create a new trip
+ * Form to create a new trip with optional cover image upload
  */
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { tripAPI } from '../services/api';
 import toast from 'react-hot-toast';
-import { HiArrowLeft } from 'react-icons/hi';
+import { HiArrowLeft, HiPhotograph, HiX } from 'react-icons/hi';
 
 const CreateTripPage = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const fileInputRef = useRef(null);
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
     const [formData, setFormData] = useState({
         title: '',
         destination: '',
@@ -32,6 +35,44 @@ const CreateTripPage = () => {
         });
     };
 
+    const handleImageChange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            toast.error('Please select a valid image file (JPEG, PNG, GIF, or WebP)');
+            return;
+        }
+
+        // Validate file size (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('Image must be less than 5MB');
+            return;
+        }
+
+        setImageFile(file);
+        const reader = new FileReader();
+        reader.onloadend = () => setImagePreview(reader.result);
+        reader.readAsDataURL(file);
+    };
+
+    const removeImage = () => {
+        setImageFile(null);
+        setImagePreview(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        const file = e.dataTransfer.files?.[0];
+        if (file) {
+            // Reuse the same handler by constructing a fake event
+            handleImageChange({ target: { files: [file] } });
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -48,7 +89,20 @@ const CreateTripPage = () => {
 
         setLoading(true);
         try {
-            const response = await tripAPI.createTrip(formData);
+            // Build FormData for multipart upload
+            const fd = new FormData();
+            fd.append('title', formData.title);
+            fd.append('destination', formData.destination);
+            fd.append('startDate', formData.startDate);
+            fd.append('endDate', formData.endDate);
+            if (formData.budget) fd.append('budget', formData.budget);
+            fd.append('budgetType', formData.budgetType);
+            fd.append('maxGroupSize', formData.maxGroupSize);
+            if (formData.description) fd.append('description', formData.description);
+            fd.append('isPublic', formData.isPublic);
+            if (imageFile) fd.append('coverImage', imageFile);
+
+            const response = await tripAPI.createTrip(fd);
             toast.success('Trip created successfully!');
             navigate(`/trips/${response.data.data.id}`);
         } catch (error) {
@@ -72,6 +126,50 @@ const CreateTripPage = () => {
                 <p className="text-gray-600 mb-8">Fill in the details to create your group adventure</p>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Cover Image Upload */}
+                    <div className="card">
+                        <h2 className="text-lg font-semibold text-gray-900 mb-4">Cover Image</h2>
+
+                        {imagePreview ? (
+                            <div className="relative rounded-xl overflow-hidden">
+                                <img
+                                    src={imagePreview}
+                                    alt="Cover preview"
+                                    className="w-full h-56 object-cover"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={removeImage}
+                                    className="absolute top-3 right-3 bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full transition-colors"
+                                >
+                                    <HiX className="w-5 h-5" />
+                                </button>
+                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-4">
+                                    <p className="text-white text-sm font-medium truncate">{imageFile?.name}</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div
+                                onClick={() => fileInputRef.current?.click()}
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={handleDrop}
+                                className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-primary-400 hover:bg-primary-50/50 transition-colors"
+                            >
+                                <HiPhotograph className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                                <p className="text-gray-600 font-medium">Click to upload or drag and drop</p>
+                                <p className="text-gray-400 text-sm mt-1">JPEG, PNG, GIF, or WebP (max 5MB)</p>
+                            </div>
+                        )}
+
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                            onChange={handleImageChange}
+                            className="hidden"
+                        />
+                    </div>
+
                     {/* Basic Info */}
                     <div className="card">
                         <h2 className="text-lg font-semibold text-gray-900 mb-4">Trip Details</h2>

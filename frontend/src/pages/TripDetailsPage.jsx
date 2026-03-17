@@ -15,7 +15,7 @@ import {
 
 const TripDetailsPage = () => {
     const { id } = useParams();
-    const { user } = useAuth();
+    const { user, isAdmin } = useAuth();
     const navigate = useNavigate();
     const [trip, setTrip] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -38,6 +38,22 @@ const TripDetailsPage = () => {
     };
 
     const handleJoin = async () => {
+        if (!user) {
+            navigate('/login', { state: { from: `/trips/${id}` } });
+            return;
+        }
+
+        if (isAdmin) {
+            toast.error('Admins cannot join trips.');
+            return;
+        }
+        
+        if (user.verificationStatus !== 'approved') {
+            toast.error('You must be KYC Verified to join a trip.');
+            navigate('/verify');
+            return;
+        }
+
         setActionLoading(true);
         try {
             await tripAPI.joinTrip(id);
@@ -93,7 +109,7 @@ const TripDetailsPage = () => {
 
     const isCreator = trip.isCreator;
     const isMember = trip.isMember;
-    const canJoin = !isMember && trip.status === 'open' && trip.currentMembers < trip.maxGroupSize;
+    const canJoin = !isMember && trip.status === 'open' && trip.currentMembers < trip.maxGroupSize && !isAdmin;
 
     return (
         <div className="container-custom py-8">

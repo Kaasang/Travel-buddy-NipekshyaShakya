@@ -6,8 +6,7 @@ import { useState } from 'react';
 import { HiX, HiCheckCircle } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 
-const BookingModal = ({ item, onClose, onConfirm }) => {
-    const [isProcessing, setIsProcessing] = useState(false);
+const BookingModal = ({ item, onClose, onConfirm, loading }) => {
     const [confirmed, setConfirmed] = useState(false);
 
     if (!item) return null;
@@ -15,13 +14,15 @@ const BookingModal = ({ item, onClose, onConfirm }) => {
     const typeLabels = { bus: 'Bus Ticket', hotel: 'Hotel Stay', trek: 'Trekking Package' };
 
     const handleConfirm = async () => {
-        setIsProcessing(true);
-        await new Promise((r) => setTimeout(r, 800 + Math.random() * 400));
-        const booking = onConfirm();
-        setIsProcessing(false);
-        setConfirmed(true);
-        toast.success(`Booking confirmed! Ref: ${booking?.id || 'BK-XXX'}`);
-        setTimeout(() => onClose(), 2000);
+        try {
+            await onConfirm();
+            setConfirmed(true);
+            toast.success(`Booking request sent!`);
+            // The parent page will close the modal via checkBookingStatus refresh and state reset
+            setTimeout(() => onClose(), 2000);
+        } catch (error) {
+            // error handled by parent
+        }
     };
 
     return (
@@ -95,10 +96,10 @@ const BookingModal = ({ item, onClose, onConfirm }) => {
 
                             <button
                                 onClick={handleConfirm}
-                                disabled={isProcessing}
+                                disabled={loading}
                                 className="btn-primary w-full py-3 text-base flex items-center justify-center gap-2"
                             >
-                                {isProcessing ? (
+                                {loading ? (
                                     <>
                                         <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />

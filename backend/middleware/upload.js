@@ -8,7 +8,7 @@ const path = require('path');
 const fs = require('fs');
 
 // Ensure upload directories exist
-const uploadDirs = ['uploads', 'uploads/profiles', 'uploads/trips'];
+const uploadDirs = ['uploads', 'uploads/profiles', 'uploads/trips', 'uploads/verification'];
 uploadDirs.forEach(dir => {
     const fullPath = path.join(__dirname, '..', dir);
     if (!fs.existsSync(fullPath)) {
@@ -26,6 +26,8 @@ const storage = multer.diskStorage({
             uploadPath = 'uploads/profiles/';
         } else if (file.fieldname === 'coverImage') {
             uploadPath = 'uploads/trips/';
+        } else if (file.fieldname === 'idFront' || file.fieldname === 'selfie') {
+            uploadPath = 'uploads/verification/';
         }
 
         cb(null, path.join(__dirname, '..', uploadPath));
