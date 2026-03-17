@@ -17,8 +17,8 @@ const Footer = () => {
                     {/* Brand */}
                     <div>
                         <Link to="/" className="flex items-center space-x-2 mb-4">
-                            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
-                                <span className="text-white font-bold text-xl">TB</span>
+                            <div className="bg-white rounded-lg p-1.5 flex items-center justify-center shadow-sm">
+                                <img src="/logo.png" alt="Travel Buddy Logo" className="h-8 w-auto object-contain" />
                             </div>
                             <span className="font-bold text-xl text-white">Travel Buddy</span>
                         </Link>

@@ -64,8 +64,8 @@ const RegisterPage = () => {
             <div className="w-full max-w-md relative z-10">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                        <span className="text-white font-bold text-2xl">TB</span>
+                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg p-2">
+                        <img src="/logo.png" alt="Travel Buddy Logo" className="w-full h-full object-contain" />
                     </div>
                     <h1 className="text-3xl font-bold text-white drop-shadow-md">Create an Account</h1>
                     <p className="text-gray-300 mt-2">Start finding your travel buddies today</p>

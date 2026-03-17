@@ -1,7 +1,4 @@
-/**
- * Home Page
- * Landing page for non-authenticated users
- */
+
 
 import { Link } from 'react-router-dom';
 import {
