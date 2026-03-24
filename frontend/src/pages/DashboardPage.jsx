@@ -31,7 +31,7 @@ const DashboardPage = () => {
                 messageAPI.getUnreadCount()
             ]);
 
-            setMatches(matchesRes.data.data.matches || []);
+            setMatches(Array.isArray(matchesRes.data.data) ? matchesRes.data.data : []);
             setMyTrips(tripsRes.data.data || { created: [], joined: [] });
             setUnreadMessages(unreadRes.data.data.count || 0);
         } catch (error) {
@@ -153,7 +153,7 @@ const DashboardPage = () => {
                                 >
                                     <div className="flex items-start space-x-4">
                                         <img
-                                            src={match.user.profile?.profilePicture || `https://ui-avatars.com/api/?name=${match.user.profile?.fullName}`}
+                                            src={match.user.profile?.profilePicture || '/default-avatar.svg'}
                                             alt={match.user.profile?.fullName}
                                             className="w-14 h-14 rounded-full object-cover"
                                         />
@@ -180,7 +180,11 @@ const DashboardPage = () => {
                     ) : (
                         <div className="card text-center py-12">
                             <HiUsers className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                            <p className="text-gray-600 mb-4">Complete your profile to get matched with travel buddies</p>
+                            <p className="text-gray-600 mb-4">
+                                {profileCompletion < 80 
+                                    ? "Complete your profile to get matched with travel buddies" 
+                                    : "No travel buddies found for your current interests."}
+                            </p>
                             <Link to="/profile/edit" className="btn-primary">
                                 Update Profile
                             </Link>

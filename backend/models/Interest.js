@@ -1,6 +1,5 @@
 /**
  * Interest Model
- * Predefined travel interests for matching users
  */
 
 const { DataTypes } = require('sequelize');
@@ -13,17 +12,17 @@ const Interest = sequelize.define('Interest', {
         autoIncrement: true
     },
     name: {
-        type: DataTypes.STRING(100),
+        type: DataTypes.STRING,
         allowNull: false,
         unique: true
     },
     category: {
-        type: DataTypes.STRING(50),
-        defaultValue: 'general'
+        type: DataTypes.STRING,
+        allowNull: false
     },
     icon: {
-        type: DataTypes.STRING(50),
-        defaultValue: '🌍'
+        type: DataTypes.STRING,
+        allowNull: true
     }
 }, {
     tableName: 'interests',

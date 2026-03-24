@@ -1,144 +1,105 @@
 /**
  * Trek Controller
- * Handles CRUD operations for Trek posts in the Find Buddies feed
+ * Handles CRUD operations for treks
  */
 
-const { User, Trek } = require('../models');
+const { Trek, User } = require('../models');
 const { asyncHandler, ApiError } = require('../middleware/errorHandler');
 
 /**
- * @desc    Get all active trek posts (Find Buddies Feed)
+ * @desc    Get all treks
  * @route   GET /api/treks
- * @access  Public (or semi-private depending on preference, currently treating as public read)
+ * @access  Public
  */
 const getTreks = asyncHandler(async (req, res) => {
-    // Optional filtering
-    const { region, difficulty } = req.query;
-    let whereClause = { status: 'active' };
-
-    if (region) whereClause.region = region;
-    if (difficulty) whereClause.difficulty = difficulty;
+    const { difficulty, location } = req.query;
+    const where = { status: 'active' };
+    if (difficulty) where.difficulty = difficulty;
+    if (location) where.location = { [require('sequelize').Op.like]: `%${location}%` };
 
     const treks = await Trek.findAll({
-        where: whereClause,
-        order: [['createdAt', 'DESC']],
-        include: [{
-            model: User,
-            as: 'poster',
-            attributes: ['id', 'email', 'verificationStatus']
-        }]
+        where,
+        order: [['createdAt', 'DESC']]
     });
 
-    res.status(200).json({
+    res.json({
         success: true,
-        count: treks.length,
         data: treks
     });
 });
 
 /**
- * @desc    Get a single trek post by ID
+ * @desc    Get single trek
  * @route   GET /api/treks/:id
  * @access  Public
  */
 const getTrekById = asyncHandler(async (req, res) => {
-    const trek = await Trek.findByPk(req.params.id, {
-        include: [{
-            model: User,
-            as: 'poster',
-            attributes: ['id', 'email', 'verificationStatus'] // Fetch poster info
-        }]
-    });
-
-    if (!trek) {
-        throw new ApiError('Trek not found', 404);
-    }
-
-    res.status(200).json({
-        success: true,
-        data: trek
-    });
-});
-
-/**
- * @desc    Create a new trek post
- * @route   POST /api/treks
- * @access  Private (Must be verified)
- */
-const createTrek = asyncHandler(async (req, res) => {
-    // 1. Double check the user is actually verified
-    const user = await User.findByPk(req.user.id);
-    if (!user || user.verificationStatus !== 'approved') {
-        throw new ApiError('You must be fully verified to post a trek.', 403);
-    }
-
-    // 2. Add poster ID to the body payload
-    const trekData = {
-        ...req.body,
-        userId: req.user.id,
-        posterName: req.body.posterName || 'Verified Trekker' // Real app would pull from Profile model
-    };
-
-    // 3. Ensure JSON fields are parsed if they come as strings
-    ['dates', 'groupSize', 'budgetRange', 'itinerary', 'inclusions', 'exclusions', 'requirements', 'images'].forEach(field => {
-        if (typeof trekData[field] === 'string') {
-            try {
-                trekData[field] = JSON.parse(trekData[field]);
-            } catch (e) {
-                // Ignore parse errors, validation will catch bad shapes
-            }
-        }
-    });
-
-    const trek = await Trek.create(trekData);
-
-    res.status(201).json({
-        success: true,
-        message: 'Trek post created successfully',
-        data: trek
-    });
-});
-
-/**
- * @desc    Update a trek post
- * @route   PUT /api/treks/:id
- * @access  Private (Owner or Admin)
- */
-const updateTrek = asyncHandler(async (req, res) => {
     const trek = await Trek.findByPk(req.params.id);
 
     if (!trek) {
         throw new ApiError('Trek not found', 404);
     }
 
-    // Only owner or admin can update
-    if (trek.userId !== req.user.id && req.user.role !== 'admin') {
-        throw new ApiError('Not authorized to update this trek', 403);
-    }
-
-    // Parse JSON fields if they come as strings
-    const updateData = { ...req.body };
-    ['dates', 'groupSize', 'budgetRange', 'itinerary', 'inclusions', 'exclusions', 'requirements', 'images'].forEach(field => {
-        if (typeof updateData[field] === 'string') {
-            try { updateData[field] = JSON.parse(updateData[field]); } catch (e) { /* ignore */ }
-        }
-    });
-
-    delete updateData.userId; // Prevent changing ownership
-
-    await trek.update(updateData);
-
-    res.status(200).json({
+    res.json({
         success: true,
-        message: 'Trek updated successfully',
         data: trek
     });
 });
 
 /**
- * @desc    Delete a trek post
+ * @desc    Create a trek
+ * @route   POST /api/treks
+ * @access  Private
+ */
+const createTrek = asyncHandler(async (req, res) => {
+    const { title, description, location, difficulty, duration, price, maxGroupSize, image } = req.body;
+
+    const trek = await Trek.create({
+        userId: req.user.id,
+        title,
+        description,
+        location,
+        difficulty,
+        duration,
+        price,
+        maxGroupSize,
+        image
+    });
+
+    res.status(201).json({
+        success: true,
+        data: trek
+    });
+});
+
+/**
+ * @desc    Update a trek
+ * @route   PUT /api/treks/:id
+ * @access  Private
+ */
+const updateTrek = asyncHandler(async (req, res) => {
+    let trek = await Trek.findByPk(req.params.id);
+
+    if (!trek) {
+        throw new ApiError('Trek not found', 404);
+    }
+
+    if (trek.userId !== req.user.id && req.user.role !== 'admin') {
+        throw new ApiError('Not authorized', 403);
+    }
+
+    await trek.update(req.body);
+
+    res.json({
+        success: true,
+        data: trek
+    });
+});
+
+/**
+ * @desc    Delete a trek
  * @route   DELETE /api/treks/:id
- * @access  Private (Owner or Admin)
+ * @access  Private
  */
 const deleteTrek = asyncHandler(async (req, res) => {
     const trek = await Trek.findByPk(req.params.id);
@@ -147,16 +108,15 @@ const deleteTrek = asyncHandler(async (req, res) => {
         throw new ApiError('Trek not found', 404);
     }
 
-    // Checking ownership or admin role
     if (trek.userId !== req.user.id && req.user.role !== 'admin') {
-        throw new ApiError('Not authorized to delete this trek', 403);
+        throw new ApiError('Not authorized', 403);
     }
 
     await trek.destroy();
 
-    res.status(200).json({
+    res.json({
         success: true,
-        message: 'Trek deleted successfully'
+        message: 'Trek deleted'
     });
 });
 

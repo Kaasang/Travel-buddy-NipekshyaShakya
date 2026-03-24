@@ -1,6 +1,5 @@
 /**
  * Trip Model
- * Stores trip details and group travel information
  */
 
 const { DataTypes } = require('sequelize');
@@ -22,17 +21,11 @@ const Trip = sequelize.define('Trip', {
         }
     },
     title: {
-        type: DataTypes.STRING(200),
-        allowNull: false,
-        validate: {
-            len: {
-                args: [5, 200],
-                msg: 'Title must be between 5 and 200 characters'
-            }
-        }
+        type: DataTypes.STRING,
+        allowNull: false
     },
     destination: {
-        type: DataTypes.STRING(200),
+        type: DataTypes.STRING,
         allowNull: false
     },
     startDate: {
@@ -46,76 +39,46 @@ const Trip = sequelize.define('Trip', {
         field: 'end_date'
     },
     budget: {
-        type: DataTypes.DECIMAL(10, 2),
-        validate: {
-            min: 0
-        }
+        type: DataTypes.FLOAT,
+        allowNull: true
     },
     budgetType: {
         type: DataTypes.ENUM('budget', 'moderate', 'luxury'),
-        field: 'budget_type',
-        defaultValue: 'moderate'
+        defaultValue: 'moderate',
+        field: 'budget_type'
     },
     maxGroupSize: {
         type: DataTypes.INTEGER,
-        field: 'max_group_size',
         defaultValue: 5,
-        validate: {
-            min: 2,
-            max: 50
-        }
+        field: 'max_group_size'
     },
     currentMembers: {
         type: DataTypes.INTEGER,
-        field: 'current_members',
-        defaultValue: 1
+        defaultValue: 1,
+        field: 'current_members'
     },
     description: {
         type: DataTypes.TEXT,
-        validate: {
-            len: {
-                args: [0, 2000],
-                msg: 'Description must be under 2000 characters'
-            }
-        }
+        allowNull: true
     },
     status: {
-        type: DataTypes.ENUM('planning', 'open', 'full', 'in_progress', 'completed', 'cancelled'),
+        type: DataTypes.ENUM('open', 'full', 'in_progress', 'completed', 'cancelled'),
         defaultValue: 'open'
-    },
-    coverImage: {
-        type: DataTypes.STRING(500),
-        field: 'cover_image',
-        defaultValue: '/uploads/default-trip.jpg'
     },
     isPublic: {
         type: DataTypes.BOOLEAN,
-        field: 'is_public',
-        defaultValue: true
+        defaultValue: true,
+        field: 'is_public'
+    },
+    coverImage: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        field: 'cover_image'
     }
 }, {
     tableName: 'trips',
     timestamps: true,
     underscored: true
 });
-
-/**
- * Check if trip has available spots
- * @returns {boolean}
- */
-Trip.prototype.hasAvailableSpots = function () {
-    return this.currentMembers < this.maxGroupSize;
-};
-
-/**
- * Get days until trip starts
- * @returns {number} Days until trip (negative if already started)
- */
-Trip.prototype.getDaysUntilStart = function () {
-    const today = new Date();
-    const start = new Date(this.startDate);
-    const diffTime = start - today;
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-};
 
 module.exports = Trip;

@@ -1,6 +1,5 @@
 /**
- * UserInterest Model
- * Junction table linking users with their travel interests
+ * UserInterest Model (Junction table)
  */
 
 const { DataTypes } = require('sequelize');
@@ -33,13 +32,7 @@ const UserInterest = sequelize.define('UserInterest', {
 }, {
     tableName: 'user_interests',
     timestamps: true,
-    underscored: true,
-    indexes: [
-        {
-            unique: true,
-            fields: ['user_id', 'interest_id']
-        }
-    ]
+    underscored: true
 });
 
 module.exports = UserInterest;

@@ -1,6 +1,5 @@
 /**
  * Message Model
- * Stores chat messages between users
  */
 
 const { DataTypes } = require('sequelize');
@@ -23,7 +22,7 @@ const Message = sequelize.define('Message', {
     },
     receiverId: {
         type: DataTypes.INTEGER,
-        allowNull: true,  // Null for group messages
+        allowNull: true,
         field: 'receiver_id',
         references: {
             model: 'users',
@@ -32,7 +31,7 @@ const Message = sequelize.define('Message', {
     },
     tripId: {
         type: DataTypes.INTEGER,
-        allowNull: true,  // Set for group trip messages
+        allowNull: true,
         field: 'trip_id',
         references: {
             model: 'trips',
@@ -41,45 +40,22 @@ const Message = sequelize.define('Message', {
     },
     content: {
         type: DataTypes.TEXT,
-        allowNull: false,
-        validate: {
-            len: {
-                args: [1, 5000],
-                msg: 'Message must be between 1 and 5000 characters'
-            }
-        }
-    },
-    messageType: {
-        type: DataTypes.ENUM('text', 'image', 'file', 'system'),
-        field: 'message_type',
-        defaultValue: 'text'
+        allowNull: false
     },
     isRead: {
         type: DataTypes.BOOLEAN,
-        field: 'is_read',
-        defaultValue: false
+        defaultValue: false,
+        field: 'is_read'
     },
-    readAt: {
-        type: DataTypes.DATE,
-        field: 'read_at'
-    },
-    isDeleted: {
-        type: DataTypes.BOOLEAN,
-        field: 'is_deleted',
-        defaultValue: false
+    messageType: {
+        type: DataTypes.ENUM('direct', 'group'),
+        defaultValue: 'direct',
+        field: 'message_type'
     }
 }, {
     tableName: 'messages',
     timestamps: true,
-    underscored: true,
-    indexes: [
-        {
-            fields: ['sender_id', 'receiver_id']
-        },
-        {
-            fields: ['trip_id']
-        }
-    ]
+    underscored: true
 });
 
 module.exports = Message;

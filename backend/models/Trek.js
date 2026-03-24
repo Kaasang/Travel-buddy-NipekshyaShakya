@@ -1,6 +1,5 @@
 /**
  * Trek Model
- * Represents trek posts created by verified users (distinct from general Trip model)
  */
 
 const { DataTypes } = require('sequelize');
@@ -21,73 +20,42 @@ const Trek = sequelize.define('Trek', {
             key: 'id'
         }
     },
-    posterName: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
-        field: 'poster_name'
-    },
     title: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.STRING,
         allowNull: false
     },
-    region: {
-        type: DataTypes.STRING(200),
-        allowNull: false
+    description: {
+        type: DataTypes.TEXT,
+        allowNull: true
     },
-    dates: {
-        type: DataTypes.JSON, // { start: 'YYYY-MM-DD', end: 'YYYY-MM-DD', flexible: boolean }
-        allowNull: false
-    },
-    duration: {
-        type: DataTypes.STRING(100),
+    location: {
+        type: DataTypes.STRING,
         allowNull: false
     },
     difficulty: {
-        type: DataTypes.ENUM('Easy', 'Moderate', 'Challenging', 'Strenuous'),
-        allowNull: false
+        type: DataTypes.ENUM('easy', 'moderate', 'hard', 'expert'),
+        defaultValue: 'moderate'
     },
-    maxAltitude: {
-        type: DataTypes.STRING(100),
-        field: 'max_altitude'
+    duration: {
+        type: DataTypes.STRING,
+        allowNull: true
     },
-    groupSize: {
-        type: DataTypes.JSON, // { min: number, max: number }
-        allowNull: false,
-        field: 'group_size'
+    price: {
+        type: DataTypes.FLOAT,
+        allowNull: true
     },
-    budgetRange: {
-        type: DataTypes.JSON, // { min: number, max: number }
-        allowNull: false,
-        field: 'budget_range'
+    maxGroupSize: {
+        type: DataTypes.INTEGER,
+        defaultValue: 10,
+        field: 'max_group_size'
     },
-    itinerary: {
-        type: DataTypes.JSON, // [{ day: number, title: string, description: string }]
-        allowNull: false
-    },
-    inclusions: {
-        type: DataTypes.JSON, // Array of strings
-        defaultValue: []
-    },
-    exclusions: {
-        type: DataTypes.JSON, // Array of strings
-        defaultValue: []
-    },
-    requirements: {
-        type: DataTypes.JSON, // Array of strings
-        defaultValue: []
-    },
-    meetingPoint: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
-        field: 'meeting_point'
+    image: {
+        type: DataTypes.STRING,
+        allowNull: true
     },
     status: {
-        type: DataTypes.ENUM('active', 'closed', 'completed'),
+        type: DataTypes.ENUM('active', 'inactive'),
         defaultValue: 'active'
-    },
-    images: {
-        type: DataTypes.JSON, // Array of URLs
-        defaultValue: []
     }
 }, {
     tableName: 'treks',

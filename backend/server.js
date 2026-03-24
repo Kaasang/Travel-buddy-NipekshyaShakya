@@ -1,151 +1,113 @@
 /**
- * Travel Buddy - Backend Server
+ * Travel Buddy Backend Server
  * Main entry point for the Express application
  */
 
 require('dotenv').config();
 const express = require('express');
+const http = require('http');
 const cors = require('cors');
 const path = require('path');
-
-// Import database configuration
-const { sequelize, testConnection } = require('./config/database');
-
-// Import models (to register associations)
-require('./models');
-
-// Import routes
+const { Server } = require('socket.io');
+const jwt = require('jsonwebtoken');
+const { connectDB } = require('./config/database');
+const { sequelize } = require('./models');
 const routes = require('./routes');
-
-// Import error handlers
-const { errorHandler, notFound } = require('./middleware/errorHandler');
-
-// Import seed data utility
+const { errorHandler } = require('./middleware/errorHandler');
 const { seedDatabase } = require('./utils/seedData');
 
-// Initialize Express app
 const app = express();
+const server = http.createServer(app);
+const PORT = process.env.PORT || 5000;
 
-// ==========================================
-// Middleware Configuration
-// ==========================================
+// Socket.IO setup
+const io = new Server(server, {
+    cors: {
+        origin: ['http://localhost:3000', 'http://localhost:5173'],
+        methods: ['GET', 'POST'],
+        credentials: true
+    }
+});
 
-// Enable CORS for frontend
-const allowedOrigins = new Set([
-    (process.env.FRONTEND_URL || '').trim(),
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://localhost:3001',
-    'http://127.0.0.1:3001'
-].filter(Boolean));
-
-app.use(cors({
-    origin: (origin, callback) => {
-        // Allow non-browser clients and same-origin requests with no Origin header.
-        if (!origin || allowedOrigins.has(origin)) {
-            return callback(null, true);
-        }
-        return callback(new Error(`CORS blocked for origin: ${origin}`));
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-// Parse JSON bodies
-app.use(express.json({ limit: '10mb' }));
-
-// Parse URL-encoded bodies
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Serve static files (uploads)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Request logging in development
-if (process.env.NODE_ENV === 'development') {
-    app.use((req, res, next) => {
-        console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+// Socket.IO authentication middleware
+io.use((socket, next) => {
+    const token = socket.handshake.auth.token;
+    if (!token) {
+        return next(new Error('Authentication error'));
+    }
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'travel-buddy-secret-key-2024');
+        socket.userId = decoded.id;
         next();
+    } catch (err) {
+        next(new Error('Authentication error'));
+    }
+});
+
+// Socket.IO connection handler
+io.on('connection', (socket) => {
+    console.log(`🔌 User ${socket.userId} connected`);
+
+    // Join personal room
+    socket.join(`user_${socket.userId}`);
+
+    // Join a chat room (trip group chat)
+    socket.on('joinRoom', (roomId) => {
+        socket.join(`room_${roomId}`);
+        console.log(`User ${socket.userId} joined room_${roomId}`);
     });
-}
 
-// ==========================================
-// API Routes
-// ==========================================
+    // Leave a chat room
+    socket.on('leaveRoom', (roomId) => {
+        socket.leave(`room_${roomId}`);
+    });
 
-// Mount all API routes under /api
-app.use('/api', routes);
-
-// Root route
-app.get('/', (req, res) => {
-    res.json({
-        success: true,
-        message: 'Welcome to Travel Buddy API',
-        version: '1.0.0',
-        documentation: '/api/health'
+    socket.on('disconnect', () => {
+        console.log(`🔌 User ${socket.userId} disconnected`);
     });
 });
 
-// ==========================================
-// Error Handling
-// ==========================================
+// Make io accessible in controllers
+app.set('io', io);
 
-// Handle 404 - Route not found
-app.use(notFound);
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Global error handler
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// API Routes
+app.use('/api', routes);
+
+// Error handler middleware (must be after routes)
 app.use(errorHandler);
 
-// ==========================================
-// Server Startup
-// ==========================================
-
-const PORT = process.env.PORT || 5000;
-
+// Start server
 const startServer = async () => {
     try {
-        // Test database connection
-        await testConnection();
+        // Connect to database
+        await connectDB();
 
-        // Sync database models (creates tables if not exist)
-        // In production, use migrations instead
+        // Sync database models (creates missing tables without modifying existing ones)
         await sequelize.sync();
-        console.log('✅ Database synced successfully');
+        console.log('✅ Database models synchronized');
 
-        // Seed database with initial data (only in development)
+        // Seed database with initial data
         if (process.env.NODE_ENV === 'development') {
-            try {
-                await seedDatabase();
-            } catch (seedError) {
-                console.log('ℹ️  Seed data may already exist:', seedError.message);
-            }
+            await seedDatabase();
         }
 
-        // Start server
-        app.listen(PORT, () => {
-            console.log('='.repeat(50));
-            console.log(`🚀 Travel Buddy Server running on port ${PORT}`);
-            console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-            console.log(`🔗 API URL: http://localhost:${PORT}/api`);
-            console.log(`❤️  Health Check: http://localhost:${PORT}/api/health`);
-            console.log('='.repeat(50));
+        server.listen(PORT, () => {
+            console.log(`🚀 Server running on port ${PORT}`);
+            console.log(`📡 API available at http://localhost:${PORT}/api`);
+            console.log(`🔌 Socket.IO ready`);
         });
     } catch (error) {
-        console.error('❌ Failed to start server:', error.message);
+        console.error('❌ Failed to start server:', error);
         process.exit(1);
     }
 };
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-    console.error('Unhandled Promise Rejection:', err.message);
-    // Close server & exit process
-    process.exit(1);
-});
-
-// Start the server
 startServer();
-
-module.exports = app;

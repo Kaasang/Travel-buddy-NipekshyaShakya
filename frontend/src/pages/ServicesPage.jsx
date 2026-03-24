@@ -6,7 +6,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { HiTruck, HiOfficeBuilding, HiFlag, HiGlobe, HiMap } from 'react-icons/hi';
-import { busServices, hotelServices, trekServices } from '../data/servicesData';
 import ServiceCard from '../components/ServiceCard';
 import BookingModal from '../components/BookingModal';
 import useBooking from '../hooks/useBooking';
@@ -53,10 +52,10 @@ const recommendedTours = [
 ];
 
 const tabs = [
-    { key: 'bus', label: 'Bus & Transport', icon: HiTruck, data: busServices },
-    { key: 'hotel', label: 'Hotels & Stays', icon: HiOfficeBuilding, data: hotelServices },
-    { key: 'trek', label: 'Trekking Packages', icon: HiFlag, data: trekServices },
-    { key: 'recommended', label: 'Recommended Tours', icon: HiGlobe, data: null },
+    { key: 'bus', label: 'Bus & Transport', icon: HiTruck },
+    { key: 'hotel', label: 'Hotels & Stays', icon: HiOfficeBuilding },
+    { key: 'trek', label: 'Trekking Packages', icon: HiFlag },
+    { key: 'recommended', label: 'Recommended Tours', icon: HiGlobe },
 ];
 
 const ServicesPage = () => {
@@ -121,24 +120,24 @@ const ServicesPage = () => {
 
     const currentTab = tabs.find((t) => t.key === activeTab);
 
-    // Merge: static data + API-created services (deduplicate by id)
-    const staticData = currentTab?.data || [];
-    const staticIds = new Set(staticData.map(s => s.id));
-    const mergedServices = [
-        ...staticData,
-        ...apiServices
-            .filter(s => !staticIds.has(s.id))
-            .map(s => ({
-                ...s,
-                // Flatten metadata fields for ServiceCard compatibility
-                route: s.metadata?.route || { from: s.metadata?.routeFrom, to: s.metadata?.routeTo },
-                city: s.metadata?.city || s.location,
-                starRating: s.metadata?.starRating,
-                reviewScore: s.rating,
-                difficulty: s.metadata?.difficulty,
-                region: s.metadata?.region,
-            }))
-    ];
+    // Map API services to ServiceCard-compatible format (flatten metadata)
+    const displayServices = apiServices.map(s => ({
+        ...s,
+        route: s.metadata?.route || { from: s.metadata?.routeFrom, to: s.metadata?.routeTo },
+        city: s.metadata?.city || s.location,
+        starRating: s.metadata?.starRating,
+        reviewScore: s.rating,
+        difficulty: s.metadata?.difficulty,
+        region: s.metadata?.region,
+        busType: s.metadata?.busType,
+        seatsAvailable: s.metadata?.seatsAvailable,
+        amenities: s.metadata?.amenities || [],
+        departureTime: s.metadata?.departureTime || [],
+        roomTypes: s.metadata?.roomTypes || [],
+        maxAltitude: s.metadata?.maxAltitude,
+        bestSeason: s.metadata?.bestSeason,
+        groupSize: s.metadata?.groupSize,
+    }));
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -213,10 +212,10 @@ const ServicesPage = () => {
                                 </div>
                             ))}
                         </div>
-                    ) : mergedServices.length > 0 ? (
+                    ) : displayServices.length > 0 ? (
                         /* Service Cards Grid */
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {mergedServices.map((service) => {
+                            {displayServices.map((service) => {
                                 const userBooking = userBookings.find(b => b.serviceId === service.id && b.serviceType === activeTab);
                                 return (
                                     <ServiceCard

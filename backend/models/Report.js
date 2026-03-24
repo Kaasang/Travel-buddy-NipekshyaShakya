@@ -1,6 +1,5 @@
 /**
  * Report Model
- * Handles user and content reporting for moderation
  */
 
 const { DataTypes } = require('sequelize');
@@ -41,30 +40,30 @@ const Report = sequelize.define('Report', {
     },
     reportType: {
         type: DataTypes.ENUM('spam', 'harassment', 'inappropriate', 'fake_profile', 'scam', 'other'),
-        field: 'report_type',
-        allowNull: false
+        allowNull: false,
+        field: 'report_type'
     },
     description: {
-        type: DataTypes.TEXT
+        type: DataTypes.TEXT,
+        allowNull: true
     },
     status: {
-        type: DataTypes.ENUM('pending', 'reviewed', 'resolved', 'dismissed'),
+        type: DataTypes.ENUM('pending', 'resolved', 'dismissed'),
         defaultValue: 'pending'
     },
     adminNotes: {
         type: DataTypes.TEXT,
+        allowNull: true,
         field: 'admin_notes'
     },
     resolvedBy: {
         type: DataTypes.INTEGER,
-        field: 'resolved_by',
-        references: {
-            model: 'users',
-            key: 'id'
-        }
+        allowNull: true,
+        field: 'resolved_by'
     },
     resolvedAt: {
         type: DataTypes.DATE,
+        allowNull: true,
         field: 'resolved_at'
     }
 }, {

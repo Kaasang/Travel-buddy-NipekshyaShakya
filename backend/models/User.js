@@ -1,11 +1,10 @@
 /**
  * User Model
- * Handles user authentication and account management
  */
 
 const { DataTypes } = require('sequelize');
-const bcrypt = require('bcryptjs');
 const { sequelize } = require('../config/database');
+const bcrypt = require('bcryptjs');
 
 const User = sequelize.define('User', {
     id: {
@@ -14,24 +13,16 @@ const User = sequelize.define('User', {
         autoIncrement: true
     },
     email: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.STRING,
         allowNull: false,
         unique: true,
         validate: {
-            isEmail: {
-                msg: 'Please provide a valid email address'
-            }
+            isEmail: true
         }
     },
     password: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
-        validate: {
-            len: {
-                args: [6, 255],
-                msg: 'Password must be at least 6 characters long'
-            }
-        }
+        type: DataTypes.STRING,
+        allowNull: false
     },
     role: {
         type: DataTypes.ENUM('user', 'admin'),
@@ -46,34 +37,18 @@ const User = sequelize.define('User', {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
         field: 'is_suspended'
-    },
-    verificationStatus: {
-        type: DataTypes.ENUM('unverified', 'pending_review', 'approved', 'rejected'),
-        defaultValue: 'unverified',
-        field: 'verification_status'
-    },
-    rejectionReason: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-        field: 'rejection_reason'
-    },
-    lastLogin: {
-        type: DataTypes.DATE,
-        field: 'last_login'
     }
 }, {
     tableName: 'users',
     timestamps: true,
     underscored: true,
     hooks: {
-        // Hash password before saving
         beforeCreate: async (user) => {
             if (user.password) {
                 const salt = await bcrypt.genSalt(10);
                 user.password = await bcrypt.hash(user.password, salt);
             }
         },
-        // Hash password before updating (if changed)
         beforeUpdate: async (user) => {
             if (user.changed('password')) {
                 const salt = await bcrypt.genSalt(10);
@@ -83,30 +58,15 @@ const User = sequelize.define('User', {
     }
 });
 
-/**
- * Compare entered password with stored hashed password
- * @param {string} enteredPassword - Password to compare
- * @returns {Promise<boolean>} - True if passwords match
- */
-User.prototype.comparePassword = async function (enteredPassword) {
+// Instance methods
+User.prototype.matchPassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 };
 
-/**
- * Return user data without sensitive information
- * @returns {Object} - Safe user object
- */
 User.prototype.toSafeObject = function () {
-    return {
-        id: this.id,
-        email: this.email,
-        role: this.role,
-        isVerified: this.isVerified,
-        verificationStatus: this.verificationStatus,
-        rejectionReason: this.rejectionReason,
-        isSuspended: this.isSuspended,
-        createdAt: this.createdAt
-    };
+    const userObj = this.toJSON();
+    delete userObj.password;
+    return userObj;
 };
 
 module.exports = User;

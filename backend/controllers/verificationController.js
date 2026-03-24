@@ -1,62 +1,61 @@
 /**
  * Verification Controller
- * Handles user KYC submissions and Admin review processes
+ * Handles KYC verification requests
  */
 
-const { User, VerificationRequest } = require('../models');
+const { VerificationRequest, User, Profile, Notification } = require('../models');
 const { asyncHandler, ApiError } = require('../middleware/errorHandler');
 
 /**
- * @desc    Submit KYC Verification Request
+ * @desc    Submit a verification request
  * @route   POST /api/verification/submit
  * @access  Private
  */
 const submitVerification = asyncHandler(async (req, res) => {
-    const { personalDetails, idDocType, idDocNumber } = req.body;
-    const userId = req.user.id;
-
-    // Check if user already has a pending or approved request
+    // Check for existing pending request
     const existing = await VerificationRequest.findOne({
-        where: { userId, status: ['pending_review', 'approved'] }
+        where: { userId: req.user.id, status: 'pending' }
     });
 
     if (existing) {
-        throw new ApiError('You already have a pending or approved verification request', 400);
+        throw new ApiError('You already have a pending verification request', 400);
     }
 
-    // Get file paths from multer uploads
-    const idFrontFile = req.files?.idFront?.[0];
-    const selfieFile = req.files?.selfie?.[0];
+    if (!req.files || !req.files.idFront || !req.files.selfie) {
+        throw new ApiError('Please upload both ID front and selfie photos', 400);
+    }
 
-    const idFrontUrl = idFrontFile ? `/uploads/verification/${idFrontFile.filename}` : '/mock-path/front.jpg';
-    const selfieUrl = selfieFile ? `/uploads/verification/${selfieFile.filename}` : '/mock-path/selfie.jpg';
+    const { personalDetails, idDocType, idDocNumber } = req.body;
 
-    // Create the verification request
+    // Parse personalDetails if sent as a JSON string
+    let parsedDetails = personalDetails;
+    if (typeof personalDetails === 'string') {
+        try {
+            parsedDetails = JSON.parse(personalDetails);
+        } catch (e) {
+            parsedDetails = {};
+        }
+    }
+
     const verification = await VerificationRequest.create({
-        userId,
-        personalDetails: typeof personalDetails === 'string' ? JSON.parse(personalDetails) : personalDetails,
-        idDocType,
-        idDocNumber,
-        idFrontUrl,
-        idBackUrl: null,
-        selfieUrl
+        userId: req.user.id,
+        personalDetails: parsedDetails || {},
+        idDocType: idDocType || 'national_id',
+        idDocNumber: idDocNumber || '',
+        idFrontUrl: `/uploads/verification/${req.files.idFront[0].filename}`,
+        selfieUrl: `/uploads/verification/${req.files.selfie[0].filename}`,
+        status: 'pending'
     });
-
-    // Update User status to pending_review
-    await User.update(
-        { verificationStatus: 'pending_review', rejectionReason: null },
-        { where: { id: userId } }
-    );
 
     res.status(201).json({
         success: true,
-        data: verification,
-        message: 'Verification submitted successfully'
+        message: 'Verification request submitted',
+        data: verification
     });
 });
 
 /**
- * @desc    Get current user's Verification Status & Request Details
+ * @desc    Get my verification status
  * @route   GET /api/verification/me
  * @access  Private
  */
@@ -66,104 +65,132 @@ const getMyVerification = asyncHandler(async (req, res) => {
         order: [['createdAt', 'DESC']]
     });
 
-    res.status(200).json({
+    res.json({
         success: true,
         data: verification
     });
 });
 
 /**
- * @desc    Admin: Get all pending Verification Requests
- * @route   GET /api/admin/verifications
- * @access  Private/Admin
+ * @desc    Get all verification requests (admin)
+ * @route   GET /api/verification/admin
+ * @access  Admin
  */
 const getAllVerifications = asyncHandler(async (req, res) => {
     const { status = 'pending_review' } = req.query;
+    const where = {};
+    // Map frontend 'pending_review' to DB 'pending' status
+    if (status !== 'all') {
+        where.status = status === 'pending_review' ? 'pending' : status;
+    }
 
     const verifications = await VerificationRequest.findAll({
-        where: { status },
+        where,
         include: [{
             model: User,
             as: 'user',
-            attributes: ['id', 'email', 'verificationStatus']
+            attributes: ['id', 'email'],
+            include: [{
+                model: Profile,
+                as: 'profile',
+                attributes: ['fullName']
+            }]
         }],
-        order: [['createdAt', 'ASC']]
+        order: [['createdAt', 'DESC']]
     });
 
-    res.status(200).json({
+    // Transform to ensure frontend gets the fields it expects
+    const transformed = verifications.map(v => {
+        const plain = v.toJSON();
+        return {
+            ...plain,
+            personalDetails: plain.personalDetails || {
+                fullName: plain.user?.profile?.fullName || plain.user?.email || 'Unknown',
+                nationality: '',
+                dob: '',
+                phone: '',
+                address: ''
+            }
+        };
+    });
+
+    res.json({
         success: true,
-        count: verifications.length,
-        data: verifications
+        data: transformed
     });
 });
 
 /**
- * @desc    Admin: Approve a verification request
- * @route   POST /api/admin/verifications/:id/approve
- * @access  Private/Admin
+ * @desc    Approve verification request (admin)
+ * @route   POST /api/verification/admin/:id/approve
+ * @access  Admin
  */
 const approveVerification = asyncHandler(async (req, res) => {
-    const requestId = req.params.id;
-    const adminId = req.user.id;
+    const verification = await VerificationRequest.findByPk(req.params.id);
 
-    const verification = await VerificationRequest.findByPk(requestId);
     if (!verification) {
         throw new ApiError('Verification request not found', 404);
     }
 
-    // Update request
-    verification.status = 'approved';
-    verification.reviewedBy = adminId;
-    verification.reviewedAt = new Date();
-    await verification.save();
+    await verification.update({
+        status: 'approved',
+        reviewedBy: req.user.id,
+        reviewedAt: new Date()
+    });
 
-    // Update user
+    // Update user verified status
     await User.update(
-        { verificationStatus: 'approved' },
+        { isVerified: true },
         { where: { id: verification.userId } }
     );
 
-    res.status(200).json({
+    // Send notification
+    await Notification.create({
+        userId: verification.userId,
+        type: 'verification',
+        title: 'Verification Approved',
+        message: 'Your identity has been verified! You can now book services.',
+        link: '/profile'
+    });
+
+    res.json({
         success: true,
-        message: 'Verification approved successfully'
+        message: 'Verification approved'
     });
 });
 
 /**
- * @desc    Admin: Reject a verification request
- * @route   POST /api/admin/verifications/:id/reject
- * @access  Private/Admin
+ * @desc    Reject verification request (admin)
+ * @route   POST /api/verification/admin/:id/reject
+ * @access  Admin
  */
 const rejectVerification = asyncHandler(async (req, res) => {
-    const requestId = req.params.id;
-    const adminId = req.user.id;
     const { reason } = req.body;
+    const verification = await VerificationRequest.findByPk(req.params.id);
 
-    if (!reason) {
-        throw new ApiError('Rejection reason is required', 400);
-    }
-
-    const verification = await VerificationRequest.findByPk(requestId);
     if (!verification) {
         throw new ApiError('Verification request not found', 404);
     }
 
-    // Update request
-    verification.status = 'rejected';
-    verification.rejectionReason = reason;
-    verification.reviewedBy = adminId;
-    verification.reviewedAt = new Date();
-    await verification.save();
+    await verification.update({
+        status: 'rejected',
+        reviewedBy: req.user.id,
+        rejectionReason: reason || 'Verification rejected',
+        reviewedAt: new Date()
+    });
 
-    // Update user
-    await User.update(
-        { verificationStatus: 'rejected', rejectionReason: reason },
-        { where: { id: verification.userId } }
-    );
+    // Send notification
+    await Notification.create({
+        userId: verification.userId,
+        type: 'verification',
+        title: 'Verification Rejected',
+        message: reason || 'Your verification was rejected. Please try again with clearer photos.',
+        link: '/profile'
+    });
 
-    res.status(200).json({
+    res.json({
         success: true,
-        message: 'Verification rejected successfully'
+        message: 'Verification rejected'
     });
 });
 

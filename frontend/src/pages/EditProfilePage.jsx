@@ -117,6 +117,19 @@ const EditProfilePage = () => {
         const file = e.target.files[0];
         if (!file) return;
 
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            toast.error('Please upload a valid image file (JPG, PNG, GIF, or WebP)');
+            return;
+        }
+
+        // Validate file size (5MB max)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('Image must be less than 5MB');
+            return;
+        }
+
         const formData = new FormData();
         formData.append('profilePicture', file);
 
@@ -125,7 +138,9 @@ const EditProfilePage = () => {
             await fetchCurrentUser();
             toast.success('Profile picture updated!');
         } catch (error) {
-            toast.error('Failed to upload image');
+            const message = error.response?.data?.message || 'Failed to upload image';
+            toast.error(message);
+            console.error('Upload error:', error);
         }
     };
 
@@ -141,7 +156,7 @@ const EditProfilePage = () => {
                         <div className="flex items-center space-x-6">
                             <div className="relative">
                                 <img
-                                    src={(user?.profile?.profilePicture ? `${user.profile.profilePicture}?t=${Date.now()}` : null) || `https://ui-avatars.com/api/?name=${formData.fullName}&size=128`}
+                                    src={(user?.profile?.profilePicture ? `${user.profile.profilePicture}?t=${Date.now()}` : null) || '/default-avatar.svg'}
                                     alt="Profile"
                                     className="w-24 h-24 rounded-full object-cover"
                                 />

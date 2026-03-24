@@ -1,6 +1,5 @@
 /**
  * Rating Model
- * Handles user ratings after trips
  */
 
 const { DataTypes } = require('sequelize');
@@ -43,35 +42,18 @@ const Rating = sequelize.define('Rating', {
         type: DataTypes.INTEGER,
         allowNull: false,
         validate: {
-            min: {
-                args: [1],
-                msg: 'Rating must be at least 1'
-            },
-            max: {
-                args: [5],
-                msg: 'Rating cannot exceed 5'
-            }
+            min: 1,
+            max: 5
         }
     },
     review: {
         type: DataTypes.TEXT,
-        validate: {
-            len: {
-                args: [0, 500],
-                msg: 'Review must be under 500 characters'
-            }
-        }
+        allowNull: true
     }
 }, {
     tableName: 'ratings',
     timestamps: true,
-    underscored: true,
-    indexes: [
-        {
-            unique: true,
-            fields: ['rater_id', 'rated_user_id', 'trip_id']
-        }
-    ]
+    underscored: true
 });
 
 module.exports = Rating;

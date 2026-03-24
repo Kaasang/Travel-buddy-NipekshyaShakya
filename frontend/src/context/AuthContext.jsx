@@ -1,6 +1,7 @@
 /**
  * Auth Context
- * Manages authentication state across the application
+ * Manages authentication state across the application.
+ * Supports "Remember Me" via localStorage (persistent) vs sessionStorage (session-only).
  */
 
 import { createContext, useContext, useState, useEffect } from 'react';
@@ -8,25 +9,48 @@ import { authAPI } from '../services/api';
 
 const AuthContext = createContext(null);
 
+/**
+ * Helper: get the active storage (localStorage if "remember me" was used, else sessionStorage).
+ * We store a flag in localStorage to know which storage holds the session.
+ */
+const getStorage = () => {
+    if (localStorage.getItem('rememberMe') === 'true') {
+        return localStorage;
+    }
+    return sessionStorage;
+};
+
+/**
+ * Helper: read token / user from whichever storage has it.
+ */
+const readToken = () =>
+    localStorage.getItem('token') || sessionStorage.getItem('token');
+
+const readUser = () =>
+    localStorage.getItem('user') || sessionStorage.getItem('user');
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    // Clear auth state (synchronous helper)
+    // Clear auth state from both storages
     const clearAuthState = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         localStorage.removeItem('role');
-        sessionStorage.clear();
+        localStorage.removeItem('rememberMe');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+        sessionStorage.removeItem('role');
         setUser(null);
         setIsAuthenticated(false);
     };
 
     // Check for existing session on mount
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('user');
+        const token = readToken();
+        const storedUser = readUser();
 
         if (token && storedUser) {
             try {
@@ -46,19 +70,21 @@ export const AuthProvider = ({ children }) => {
         try {
             const response = await authAPI.getMe();
             const userData = response.data.data;
-            
+            const storage = getStorage();
+
             setUser(userData);
-            localStorage.setItem('user', JSON.stringify(userData));
+            storage.setItem('user', JSON.stringify(userData));
         } catch (error) {
             logout();
         }
     };
 
-    // Register new user
+    // Register new user (always uses localStorage for new registrations)
     const register = async (email, password, fullName) => {
         const response = await authAPI.register({ email, password, fullName });
         const { user: userData, token } = response.data.data;
 
+        localStorage.setItem('rememberMe', 'true');
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userData));
         localStorage.setItem('role', userData.role || 'user');
@@ -68,14 +94,21 @@ export const AuthProvider = ({ children }) => {
         return response.data;
     };
 
-    // Login user
-    const login = async (email, password) => {
+    // Login user with optional "Remember Me"
+    const login = async (email, password, rememberMe = false) => {
         const response = await authAPI.login({ email, password });
         const { user: userData, token } = response.data.data;
 
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(userData));
-        localStorage.setItem('role', userData.role || 'user');
+        // Clear any previous session data from both storages
+        clearAuthState();
+
+        // Choose storage based on rememberMe
+        const storage = rememberMe ? localStorage : sessionStorage;
+        localStorage.setItem('rememberMe', String(rememberMe));
+        storage.setItem('token', token);
+        storage.setItem('user', JSON.stringify(userData));
+        storage.setItem('role', userData.role || 'user');
+
         setUser(userData);
         setIsAuthenticated(true);
 
@@ -85,19 +118,18 @@ export const AuthProvider = ({ children }) => {
     // Logout user
     const logout = async () => {
         try {
-            // Call backend logout endpoint
             await authAPI.logout();
         } catch (error) {
             console.error('Logout error:', error);
         }
-        // Always clear local state
         clearAuthState();
     };
 
     // Update user data
     const updateUser = (userData) => {
+        const storage = getStorage();
         setUser(prev => ({ ...prev, ...userData }));
-        localStorage.setItem('user', JSON.stringify({ ...user, ...userData }));
+        storage.setItem('user', JSON.stringify({ ...user, ...userData }));
     };
 
     const value = {

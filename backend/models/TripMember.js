@@ -1,6 +1,5 @@
 /**
  * TripMember Model
- * Tracks users who have joined trips
  */
 
 const { DataTypes } = require('sequelize');
@@ -31,28 +30,22 @@ const TripMember = sequelize.define('TripMember', {
         }
     },
     role: {
-        type: DataTypes.ENUM('creator', 'member', 'pending'),
+        type: DataTypes.ENUM('creator', 'member'),
         defaultValue: 'member'
-    },
-    joinedAt: {
-        type: DataTypes.DATE,
-        field: 'joined_at',
-        defaultValue: DataTypes.NOW
     },
     status: {
         type: DataTypes.ENUM('active', 'left', 'removed'),
         defaultValue: 'active'
+    },
+    joinedAt: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+        field: 'joined_at'
     }
 }, {
     tableName: 'trip_members',
     timestamps: true,
-    underscored: true,
-    indexes: [
-        {
-            unique: true,
-            fields: ['trip_id', 'user_id']
-        }
-    ]
+    underscored: true
 });
 
 module.exports = TripMember;

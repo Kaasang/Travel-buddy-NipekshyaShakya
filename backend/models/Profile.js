@@ -1,6 +1,5 @@
 /**
  * Profile Model
- * Stores user profile information and travel preferences
  */
 
 const { DataTypes } = require('sequelize');
@@ -23,124 +22,71 @@ const Profile = sequelize.define('Profile', {
         }
     },
     fullName: {
-        type: DataTypes.STRING(100),
+        type: DataTypes.STRING,
         allowNull: false,
-        field: 'full_name',
-        validate: {
-            len: {
-                args: [2, 100],
-                msg: 'Full name must be between 2 and 100 characters'
-            }
-        }
+        defaultValue: 'User',
+        field: 'full_name'
     },
     age: {
         type: DataTypes.INTEGER,
-        validate: {
-            min: {
-                args: [18],
-                msg: 'You must be at least 18 years old'
-            },
-            max: {
-                args: [120],
-                msg: 'Please enter a valid age'
-            }
-        }
+        allowNull: true
     },
     gender: {
         type: DataTypes.ENUM('male', 'female', 'other', 'prefer_not_to_say'),
-        defaultValue: 'prefer_not_to_say'
+        allowNull: true
     },
     nationality: {
-        type: DataTypes.STRING(100)
+        type: DataTypes.STRING,
+        allowNull: true
     },
     travelStyle: {
         type: DataTypes.ENUM('budget', 'moderate', 'luxury', 'adventure', 'backpacker'),
-        field: 'travel_style',
-        defaultValue: 'moderate'
+        allowNull: true,
+        field: 'travel_style'
     },
     preferredDestinations: {
-        type: DataTypes.TEXT,
-        field: 'preferred_destinations',
-        get() {
-            const rawValue = this.getDataValue('preferredDestinations');
-            return rawValue ? JSON.parse(rawValue) : [];
-        },
-        set(value) {
-            this.setDataValue('preferredDestinations', JSON.stringify(value));
-        }
+        type: DataTypes.JSON,
+        allowNull: true,
+        field: 'preferred_destinations'
     },
     availabilityStart: {
         type: DataTypes.DATEONLY,
+        allowNull: true,
         field: 'availability_start'
     },
     availabilityEnd: {
         type: DataTypes.DATEONLY,
+        allowNull: true,
         field: 'availability_end'
     },
     groupSizePreference: {
         type: DataTypes.INTEGER,
-        field: 'group_size_preference',
-        defaultValue: 4,
-        validate: {
-            min: 2,
-            max: 20
-        }
+        allowNull: true,
+        field: 'group_size_preference'
     },
     bio: {
         type: DataTypes.TEXT,
-        validate: {
-            len: {
-                args: [0, 1000],
-                msg: 'Bio must be under 1000 characters'
-            }
-        }
+        allowNull: true
     },
     profilePicture: {
-        type: DataTypes.STRING(500),
-        field: 'profile_picture',
-        defaultValue: '/uploads/default-avatar.png'
+        type: DataTypes.STRING,
+        allowNull: true,
+        field: 'profile_picture'
     },
     averageRating: {
-        type: DataTypes.DECIMAL(3, 2),
-        field: 'average_rating',
-        defaultValue: 0.00,
-        validate: {
-            min: 0,
-            max: 5
-        }
+        type: DataTypes.FLOAT,
+        defaultValue: 0,
+        field: 'average_rating'
     },
     totalRatings: {
         type: DataTypes.INTEGER,
-        field: 'total_ratings',
-        defaultValue: 0
+        defaultValue: 0,
+        field: 'total_ratings'
     }
 }, {
     tableName: 'profiles',
     timestamps: true,
     underscored: true
 });
-
-/**
- * Calculate profile completion percentage
- * @returns {number} - Percentage of profile completed (0-100)
- */
-Profile.prototype.getCompletionPercentage = function () {
-    const fields = [
-        'fullName', 'age', 'gender', 'nationality',
-        'travelStyle', 'preferredDestinations', 'availabilityStart',
-        'availabilityEnd', 'groupSizePreference', 'bio', 'profilePicture'
-    ];
-
-    let filledFields = 0;
-    fields.forEach(field => {
-        const value = this[field];
-        if (value && value !== '' && value !== '/uploads/default-avatar.png') {
-            if (Array.isArray(value) && value.length > 0) filledFields++;
-            else if (!Array.isArray(value)) filledFields++;
-        }
-    });
-
-    return Math.round((filledFields / fields.length) * 100);
-};
 
 module.exports = Profile;

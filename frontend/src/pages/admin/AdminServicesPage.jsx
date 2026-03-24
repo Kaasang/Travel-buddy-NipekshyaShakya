@@ -62,8 +62,9 @@ const AdminServicesPage = () => {
             const res = await serviceAPI.getAll(activeType);
             setServices(res.data.data || []);
         } catch (err) {
-            console.error(err);
-            toast.error('Failed to load services');
+            console.error('Fetch services error:', err);
+            const msg = err.response?.data?.message || 'Failed to load services';
+            toast.error(msg);
         } finally {
             setLoading(false);
         }
@@ -182,7 +183,9 @@ const AdminServicesPage = () => {
             toast.success('Service deleted');
             fetchServices();
         } catch (err) {
-            toast.error('Failed to delete service');
+            console.error('Delete error:', err);
+            const msg = err.response?.data?.message || 'Failed to delete service';
+            toast.error(msg);
         }
     };
 

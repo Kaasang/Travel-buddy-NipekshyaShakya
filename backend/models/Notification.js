@@ -1,6 +1,5 @@
 /**
  * Notification Model
- * Stores user notifications for matches, messages, and trips
  */
 
 const { DataTypes } = require('sequelize');
@@ -22,11 +21,11 @@ const Notification = sequelize.define('Notification', {
         }
     },
     type: {
-        type: DataTypes.ENUM('match', 'message', 'trip_request', 'trip_update', 'rating', 'system', 'booking'),
+        type: DataTypes.ENUM('system', 'trip_request', 'message', 'booking', 'verification'),
         allowNull: false
     },
     title: {
-        type: DataTypes.STRING(200),
+        type: DataTypes.STRING,
         allowNull: false
     },
     message: {
@@ -34,16 +33,13 @@ const Notification = sequelize.define('Notification', {
         allowNull: false
     },
     link: {
-        type: DataTypes.STRING(500)
+        type: DataTypes.STRING,
+        allowNull: true
     },
     isRead: {
         type: DataTypes.BOOLEAN,
-        field: 'is_read',
-        defaultValue: false
-    },
-    readAt: {
-        type: DataTypes.DATE,
-        field: 'read_at'
+        defaultValue: false,
+        field: 'is_read'
     }
 }, {
     tableName: 'notifications',

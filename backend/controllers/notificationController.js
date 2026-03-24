@@ -7,22 +7,19 @@ const { Notification } = require('../models');
 const { asyncHandler, ApiError } = require('../middleware/errorHandler');
 
 /**
- * @desc    Get user notifications
+ * @desc    Get notifications for current user
  * @route   GET /api/notifications
  * @access  Private
  */
 const getNotifications = asyncHandler(async (req, res) => {
-    const { page = 1, limit = 20, unreadOnly = false } = req.query;
+    const { page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
 
-    const where = { userId: req.user.id };
-    if (unreadOnly === 'true') where.isRead = false;
-
     const { count, rows: notifications } = await Notification.findAndCountAll({
-        where,
+        where: { userId: req.user.id },
+        order: [['createdAt', 'DESC']],
         limit: parseInt(limit),
-        offset: parseInt(offset),
-        order: [['createdAt', 'DESC']]
+        offset: parseInt(offset)
     });
 
     res.json({
@@ -44,18 +41,13 @@ const getNotifications = asyncHandler(async (req, res) => {
  * @access  Private
  */
 const markAsRead = asyncHandler(async (req, res) => {
-    const notification = await Notification.findOne({
-        where: { id: req.params.id, userId: req.user.id }
-    });
+    const notification = await Notification.findByPk(req.params.id);
 
-    if (!notification) {
+    if (!notification || notification.userId !== req.user.id) {
         throw new ApiError('Notification not found', 404);
     }
 
-    await notification.update({
-        isRead: true,
-        readAt: new Date()
-    });
+    await notification.update({ isRead: true });
 
     res.json({
         success: true,
@@ -70,7 +62,7 @@ const markAsRead = asyncHandler(async (req, res) => {
  */
 const markAllAsRead = asyncHandler(async (req, res) => {
     await Notification.update(
-        { isRead: true, readAt: new Date() },
+        { isRead: true },
         { where: { userId: req.user.id, isRead: false } }
     );
 
@@ -102,11 +94,9 @@ const getUnreadCount = asyncHandler(async (req, res) => {
  * @access  Private
  */
 const deleteNotification = asyncHandler(async (req, res) => {
-    const notification = await Notification.findOne({
-        where: { id: req.params.id, userId: req.user.id }
-    });
+    const notification = await Notification.findByPk(req.params.id);
 
-    if (!notification) {
+    if (!notification || notification.userId !== req.user.id) {
         throw new ApiError('Notification not found', 404);
     }
 

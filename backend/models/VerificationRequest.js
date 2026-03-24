@@ -1,6 +1,5 @@
 /**
  * VerificationRequest Model
- * Handles user KYC (Know Your Customer) submissions
  */
 
 const { DataTypes } = require('sequelize');
@@ -22,38 +21,38 @@ const VerificationRequest = sequelize.define('VerificationRequest', {
         }
     },
     personalDetails: {
-        type: DataTypes.JSON, // Stores: fullName, dob, nationality, phone, address
-        allowNull: false,
+        type: DataTypes.JSON,
+        allowNull: true,
         field: 'personal_details'
     },
     idDocType: {
-        type: DataTypes.ENUM('passport', 'national_id', 'drivers_license'),
-        allowNull: false,
+        type: DataTypes.STRING,
+        allowNull: true,
         field: 'id_doc_type'
     },
     idDocNumber: {
-        type: DataTypes.STRING(100),
-        allowNull: false,
+        type: DataTypes.STRING,
+        allowNull: true,
         field: 'id_doc_number'
     },
     idFrontUrl: {
-        type: DataTypes.STRING(500),
-        allowNull: false,
+        type: DataTypes.STRING,
+        allowNull: true,
         field: 'id_front_url'
     },
     idBackUrl: {
-        type: DataTypes.STRING(500),
+        type: DataTypes.STRING,
         allowNull: true,
         field: 'id_back_url'
     },
     selfieUrl: {
-        type: DataTypes.STRING(500),
-        allowNull: false,
+        type: DataTypes.STRING,
+        allowNull: true,
         field: 'selfie_url'
     },
     status: {
-        type: DataTypes.ENUM('pending_review', 'approved', 'rejected'),
-        defaultValue: 'pending_review'
+        type: DataTypes.ENUM('pending', 'approved', 'rejected'),
+        defaultValue: 'pending'
     },
     rejectionReason: {
         type: DataTypes.TEXT,

@@ -3,7 +3,7 @@
  * Handles user reporting functionality
  */
 
-const { Report, User, Message, Profile } = require('../models');
+const { Report, User, Profile, Message } = require('../models');
 const { asyncHandler, ApiError } = require('../middleware/errorHandler');
 
 /**
@@ -15,30 +15,11 @@ const createReport = asyncHandler(async (req, res) => {
     const { reportedUserId, reportedMessageId, reportType, description } = req.body;
 
     if (!reportedUserId && !reportedMessageId) {
-        throw new ApiError('Please specify a user or message to report', 400);
+        throw new ApiError('Please provide a user or message to report', 400);
     }
 
-    if (!reportType) {
-        throw new ApiError('Report type is required', 400);
-    }
-
-    // Prevent self-reporting
     if (reportedUserId && parseInt(reportedUserId) === req.user.id) {
-        throw new ApiError('You cannot report yourself', 400);
-    }
-
-    // Check if already reported recently
-    const existingReport = await Report.findOne({
-        where: {
-            reporterId: req.user.id,
-            reportedUserId: reportedUserId || null,
-            reportedMessageId: reportedMessageId || null,
-            status: 'pending'
-        }
-    });
-
-    if (existingReport) {
-        throw new ApiError('You have already submitted a report for this. It is being reviewed.', 400);
+        throw new ApiError('Cannot report yourself', 400);
     }
 
     const report = await Report.create({
@@ -51,7 +32,7 @@ const createReport = asyncHandler(async (req, res) => {
 
     res.status(201).json({
         success: true,
-        message: 'Report submitted successfully. Our team will review it shortly.',
+        message: 'Report submitted successfully',
         data: report
     });
 });

@@ -23,10 +23,13 @@ const registerValidation = [
         .withMessage('Please provide a valid email')
         .normalizeEmail(),
     body('password')
-        .isLength({ min: 6 })
-        .withMessage('Password must be at least 6 characters'),
+        .isLength({ min: 8 })
+        .withMessage('Password must be at least 8 characters')
+        .matches(/[!@#$%^&*(),.?":{}|<>]/)
+        .withMessage('Password must contain at least one special character'),
     body('fullName')
-        .optional()
+        .notEmpty()
+        .withMessage('Full name is required')
         .isLength({ min: 2, max: 100 })
         .withMessage('Full name must be between 2 and 100 characters')
 ];
@@ -46,8 +49,10 @@ const passwordValidation = [
         .notEmpty()
         .withMessage('Current password is required'),
     body('newPassword')
-        .isLength({ min: 6 })
-        .withMessage('New password must be at least 6 characters')
+        .isLength({ min: 8 })
+        .withMessage('New password must be at least 8 characters')
+        .matches(/[!@#$%^&*(),.?":{}|<>]/)
+        .withMessage('New password must contain at least one special character')
 ];
 
 // Routes

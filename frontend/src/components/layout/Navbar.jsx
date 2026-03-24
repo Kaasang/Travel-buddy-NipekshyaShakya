@@ -80,9 +80,9 @@ const Navbar = () => {
                     {/* Logo */}
                     <Link to={isAuthenticated ? '/dashboard' : '/'} className="flex items-center space-x-2">
                         <img
-                            src="/images/logo.png"
-                            alt="Travel Buddy Nepal"
-                            className="h-10 w-auto object-contain"
+                            src="/logo.png"
+                            alt="Travel Buddy Logo"
+                            className="h-12 w-auto object-contain"
                         />
                         <span className="font-bold text-xl text-gray-900">Travel Buddy</span>
                     </Link>
@@ -135,10 +135,10 @@ const Navbar = () => {
                                         className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
                                     >
                                         <img
-                                            src={user?.profile?.profilePicture ? `${user.profile.profilePicture}?t=${Date.now()}` : '/uploads/default-avatar.png'}
+                                            src={user?.profile?.profilePicture ? `${user.profile.profilePicture}?t=${Date.now()}` : '/default-avatar.svg'}
                                             alt={user?.profile?.fullName}
                                             className="w-8 h-8 rounded-full object-cover bg-gray-200"
-                                            onError={(e) => { e.target.src = 'https://ui-avatars.com/api/?name=' + (user?.profile?.fullName || 'User'); }}
+                                            onError={(e) => { e.target.src = '/default-avatar.svg'; }}
                                         />
                                         <span className="text-gray-700 font-medium flex items-center gap-1.5">
                                             {user?.profile?.fullName?.split(' ')[0] || 'User'}

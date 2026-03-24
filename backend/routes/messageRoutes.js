@@ -13,6 +13,8 @@ const {
     getConversation,
     getTripMessages,
     getInbox,
+    getGroups,
+    searchUsers,
     deleteMessage,
     getUnreadCount
 } = require('../controllers/messageController');
@@ -28,6 +30,8 @@ const messageValidation = [
 router.use(protect);
 
 router.get('/inbox', getInbox);
+router.get('/groups', getGroups);
+router.get('/search-users', searchUsers);
 router.get('/unread/count', getUnreadCount);
 router.get('/conversation/:userId', getConversation);
 router.get('/trip/:tripId', getTripMessages);

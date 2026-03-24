@@ -16,7 +16,8 @@ const api = axios.create({
 // Request interceptor - adds auth token to all requests
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
+        // Check both storages to support Remember Me feature
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -32,16 +33,14 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            // Clear stored credentials so ProtectedRoute / AuthContext
-            // will detect the user is no longer authenticated and redirect
-            // via React Router (with replace) instead of a hard page reload.
+            // Clear stored credentials from both storages
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             localStorage.removeItem('role');
-            // NOTE: We intentionally do NOT do window.location.href here.
-            // The React ProtectedRoute component reads live context state and
-            // will <Navigate to="/login" replace /> on the next render cycle.
-            // A hard redirect would bypass React state and cause race conditions.
+            localStorage.removeItem('rememberMe');
+            sessionStorage.removeItem('token');
+            sessionStorage.removeItem('user');
+            sessionStorage.removeItem('role');
         }
         return Promise.reject(error);
     }
@@ -65,7 +64,9 @@ export const userAPI = {
     getUsers: (params) => api.get('/users', { params }),
     getUser: (id) => api.get(`/users/${id}`),
     updateProfile: (data) => api.put('/users/profile', data),
-    uploadProfilePicture: (formData) => api.post('/users/profile/picture', formData),
+    uploadProfilePicture: (formData) => api.post('/users/profile/picture', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
     updateInterests: (interestIds) => api.put('/users/interests', { interestIds }),
     getAllInterests: () => api.get('/users/interests/all'),
     getUserRatings: (id) => api.get(`/users/${id}/ratings`),
@@ -122,6 +123,8 @@ export const messageAPI = {
     getConversation: (userId, params) => api.get(`/messages/conversation/${userId}`, { params }),
     getTripMessages: (tripId, params) => api.get(`/messages/trip/${tripId}`, { params }),
     getInbox: () => api.get('/messages/inbox'),
+    getGroups: () => api.get('/messages/groups'),
+    searchUsers: (q) => api.get('/messages/search-users', { params: { q } }),
     deleteMessage: (id) => api.delete(`/messages/${id}`),
     getUnreadCount: () => api.get('/messages/unread/count')
 };

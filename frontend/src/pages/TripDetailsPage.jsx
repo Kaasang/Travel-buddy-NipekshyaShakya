@@ -235,7 +235,7 @@ const TripDetailsPage = () => {
                             className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
                         >
                             <img
-                                src={trip.creator?.profile?.profilePicture || `https://ui-avatars.com/api/?name=${trip.creator?.profile?.fullName}`}
+                                src={trip.creator?.profile?.profilePicture || '/default-avatar.svg'}
                                 alt={trip.creator?.profile?.fullName}
                                 className="w-12 h-12 rounded-full object-cover"
                             />
@@ -259,7 +259,7 @@ const TripDetailsPage = () => {
                                     className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50"
                                 >
                                     <img
-                                        src={member.user?.profile?.profilePicture || `https://ui-avatars.com/api/?name=${member.user?.profile?.fullName}`}
+                                        src={member.user?.profile?.profilePicture || '/default-avatar.svg'}
                                         alt=""
                                         className="w-10 h-10 rounded-full"
                                     />

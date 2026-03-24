@@ -75,7 +75,7 @@ const UsersManagement = () => {
                         {users.map(u => (
                             <tr key={u.id} className="border-t">
                                 <td className="px-4 py-3 flex items-center space-x-2">
-                                    <img src={u.profile?.profilePicture || `https://ui-avatars.com/api/?name=${u.profile?.fullName}`} alt="" className="w-8 h-8 rounded-full" />
+                                    <img src={u.profile?.profilePicture || '/default-avatar.svg'} alt="" className="w-8 h-8 rounded-full" />
                                     <span>{u.profile?.fullName || 'Unknown'}</span>
                                 </td>
                                 <td className="px-4 py-3">{u.email}</td>
@@ -163,7 +163,7 @@ const AdminProfile = () => {
             <div className="flex flex-col items-center space-y-6">
                 <div className="relative">
                     <img
-                        src={user?.profile?.profilePicture || `https://ui-avatars.com/api/?name=${user?.profile?.fullName || 'Admin'}&size=128`}
+                        src={user?.profile?.profilePicture || '/default-avatar.svg'}
                         alt="Admin Profile"
                         className="w-40 h-40 rounded-full object-cover border-4 border-primary-100 shadow-md"
                     />

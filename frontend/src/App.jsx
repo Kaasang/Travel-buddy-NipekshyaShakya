@@ -6,6 +6,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 
 // Layout components
 import Navbar from './components/layout/Navbar';
@@ -243,8 +244,9 @@ function App() {
     return (
         <Router>
             <AuthProvider>
-                <AppRoutes />
-                <Toaster
+                <SocketProvider>
+                    <AppRoutes />
+                    <Toaster
                     position="top-right"
                     toastOptions={{
                         duration: 4000,
@@ -269,6 +271,7 @@ function App() {
                         },
                     }}
                 />
+                </SocketProvider>
             </AuthProvider>
         </Router>
     );

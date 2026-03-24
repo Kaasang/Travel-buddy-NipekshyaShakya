@@ -53,7 +53,7 @@ const LoginPage = () => {
         setLoading(true);
 
         try {
-            const responseData = await login(formData.email, formData.password);
+            const responseData = await login(formData.email, formData.password, false);
             toast.success('Welcome back!');
             handleLoginSuccess(responseData);
         } catch (error) {
@@ -147,17 +147,6 @@ const LoginPage = () => {
                                     )}
                                 </button>
                             </div>
-                        </div>
-
-                        {/* Remember & Forgot */}
-                        <div className="flex items-center justify-between">
-                            <label className="flex items-center">
-                                <input type="checkbox" className="rounded border-gray-400 bg-white/10 text-primary-500 focus:ring-primary-500" />
-                                <span className="ml-2 text-sm text-gray-300">Remember me</span>
-                            </label>
-                            <a href="#" className="text-sm text-primary-400 hover:text-primary-300 transition-colors">
-                                Forgot password?
-                            </a>
                         </div>
 
                         {/* Submit */}

@@ -206,7 +206,7 @@ const TripsPage = () => {
                                     {/* Creator */}
                                     <div className="flex items-center pt-2">
                                         <img
-                                            src={trip.creator?.profile?.profilePicture || `https://ui-avatars.com/api/?name=${trip.creator?.profile?.fullName}`}
+                                            src={trip.creator?.profile?.profilePicture || '/default-avatar.svg'}
                                             alt=""
                                             className="w-6 h-6 rounded-full mr-2"
                                         />

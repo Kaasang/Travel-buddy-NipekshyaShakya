@@ -34,9 +34,14 @@ const RegisterPage = () => {
             return;
         }
 
-        // Validate password length
-        if (formData.password.length < 6) {
-            toast.error('Password must be at least 6 characters');
+        // Validate password strength
+        if (formData.password.length < 8) {
+            toast.error('Password must be at least 8 characters');
+            return;
+        }
+
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) {
+            toast.error('Password must contain at least one special character (e.g., @, #, $, %)');
             return;
         }
 
@@ -128,7 +133,7 @@ const RegisterPage = () => {
                                     value={formData.password}
                                     onChange={handleChange}
                                     required
-                                    minLength={6}
+                                    minLength={8}
                                     className="w-full bg-white/10 border border-white/30 text-white rounded-lg px-4 py-2.5 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white/20 transition-colors placeholder-gray-400"
                                     placeholder="••••••••"
                                 />
@@ -144,7 +149,7 @@ const RegisterPage = () => {
                                     )}
                                 </button>
                             </div>
-                            <p className="text-xs text-gray-400 mt-1">Minimum 6 characters</p>
+                            <p className="text-xs text-gray-400 mt-1">Minimum 8 characters, must include a special character (e.g., @, #, $)</p>
                         </div>
 
                         {/* Confirm Password */}

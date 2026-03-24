@@ -40,18 +40,33 @@ const ProfilePage = () => {
         const file = e.target.files[0];
         if (!file) return;
 
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            toast.error('Please upload a valid image file (JPG, PNG, GIF, or WebP)');
+            return;
+        }
+
+        // Validate file size (5MB max)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('Image must be less than 5MB');
+            return;
+        }
+
         const formData = new FormData();
         formData.append('profilePicture', file);
 
         try {
             const response = await userAPI.uploadProfilePicture(formData);
             if (updateUser) {
-                 updateUser({ profile: { ...user.profile, profilePicture: response.data.data.profilePicture } });
+                updateUser({ profile: { ...user.profile, profilePicture: response.data.data.profilePicture } });
             }
             toast.success('Profile picture updated!');
             fetchProfileData();
         } catch (error) {
-            toast.error('Failed to upload image');
+            const message = error.response?.data?.message || 'Failed to upload image';
+            toast.error(message);
+            console.error('Upload error:', error);
         }
     };
 
@@ -66,7 +81,7 @@ const ProfilePage = () => {
                     {/* Avatar */}
                     <div className="relative group">
                         <img
-                            src={profile.profilePicture || `https://ui-avatars.com/api/?name=${profile.fullName}&size=128`}
+                            src={profile.profilePicture || '/default-avatar.svg'}
                             alt={profile.fullName}
                             className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
                         />
@@ -87,8 +102,10 @@ const ProfilePage = () => {
                     <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
                             <h1 className="text-2xl font-bold text-gray-900">{profile.fullName || 'Unknown'}</h1>
-                            {user?.isVerified && (
+                            {user?.isVerified ? (
                                 <span className="badge-success">Verified</span>
+                            ) : (
+                                <span className="badge-warning">Unverified</span>
                             )}
                         </div>
 
@@ -137,16 +154,16 @@ const ProfilePage = () => {
                 </div>
             </div>
 
-            {/* KYC Verification Status */}
+            {/* Identity Verification Status */}
             <div className="card mb-6">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                            user?.verificationStatus === 'approved' ? 'bg-green-100' :
+                            user?.isVerified ? 'bg-green-100' :
                             user?.verificationStatus === 'pending_review' ? 'bg-yellow-100' :
                             user?.verificationStatus === 'rejected' ? 'bg-red-100' : 'bg-gray-100'
                         }`}>
-                            {user?.verificationStatus === 'approved' ? (
+                            {user?.isVerified ? (
                                 <HiBadgeCheck className="w-6 h-6 text-green-500" />
                             ) : user?.verificationStatus === 'pending_review' ? (
                                 <HiCalendar className="w-6 h-6 text-yellow-500" />
@@ -157,15 +174,15 @@ const ProfilePage = () => {
                         <div>
                             <h3 className="font-semibold text-gray-900">Identity Verification</h3>
                             <p className="text-sm text-gray-500">
-                                {user?.verificationStatus === 'approved' && 'Your identity has been verified'}
-                                {user?.verificationStatus === 'pending_review' && 'Your documents are under review'}
-                                {user?.verificationStatus === 'rejected' && 'Your verification was rejected'}
-                                {(!user?.verificationStatus || user?.verificationStatus === 'unverified') && 'Verify your identity to unlock all features'}
+                                {user?.isVerified && 'Your identity has been verified'}
+                                {!user?.isVerified && user?.verificationStatus === 'pending_review' && 'Your documents are under review'}
+                                {!user?.isVerified && user?.verificationStatus === 'rejected' && 'Your verification was rejected'}
+                                {!user?.isVerified && (!user?.verificationStatus || user?.verificationStatus === 'unverified') && 'Verify your identity to unlock all features'}
                             </p>
                         </div>
                     </div>
                     <div>
-                        {user?.verificationStatus === 'approved' ? (
+                        {user?.isVerified ? (
                             <span className="badge-success">Verified</span>
                         ) : user?.verificationStatus === 'pending_review' ? (
                             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending Review</span>
@@ -186,8 +203,8 @@ const ProfilePage = () => {
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`py-4 px-1 border-b-2 font-medium text-sm capitalize ${activeTab === tab
-                                    ? 'border-primary-600 text-primary-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                                ? 'border-primary-600 text-primary-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700'
                                 }`}
                         >
                             {tab}
@@ -317,7 +334,7 @@ const ProfilePage = () => {
                                 <div key={rating.id} className="card">
                                     <div className="flex items-start space-x-4">
                                         <img
-                                            src={rating.rater?.profile?.profilePicture || 'https://ui-avatars.com/api/?name=User'}
+                                            src={rating.rater?.profile?.profilePicture || '/default-avatar.svg'}
                                             alt=""
                                             className="w-10 h-10 rounded-full"
                                         />

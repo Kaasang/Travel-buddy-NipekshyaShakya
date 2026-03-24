@@ -29,7 +29,7 @@ const MatchesPage = () => {
             const params = { ...buddyFilters };
             Object.keys(params).forEach(key => !params[key] && delete params[key]);
             const response = await matchAPI.getMatches(params);
-            setMatches(response.data.data.matches || []);
+            setMatches(response.data.data || []);
         } catch (error) {
             console.error('Error fetching matches:', error);
         } finally {
@@ -89,7 +89,7 @@ const MatchesPage = () => {
                     {matches.map(({ user: matchUser, matchScore }) => (
                         <div key={matchUser.id} className="card hover:shadow-lg transition-all group overflow-hidden border border-gray-100 relative">
                             <div className="flex items-start space-x-4 relative z-10">
-                                <img src={matchUser.profile?.profilePicture || `https://ui-avatars.com/api/?name=${matchUser.profile?.fullName}`} alt="" className="w-14 h-14 rounded-full border-2 border-white shadow-sm" />
+                                <img src={matchUser.profile?.profilePicture || '/default-avatar.svg'} alt="" className="w-14 h-14 rounded-full border-2 border-white shadow-sm" />
                                 <div className="flex-1">
                                     <div className="flex justify-between items-start">
                                         <h3 className="font-bold text-gray-900">{matchUser.profile?.fullName}</h3>

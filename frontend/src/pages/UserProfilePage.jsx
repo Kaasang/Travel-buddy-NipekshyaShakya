@@ -78,7 +78,7 @@ const UserProfilePage = () => {
                     <div className="card">
                         <div className="flex items-start space-x-6">
                             <div className="relative">
-                                <img src={profile.profilePicture || `https://ui-avatars.com/api/?name=${profile.fullName}&size=128`} alt="" className="w-24 h-24 rounded-full object-cover" />
+                                <img src={profile.profilePicture || '/default-avatar.svg'} alt="" className="w-24 h-24 rounded-full object-cover" />
                                 {userData.isVerified && <div className="absolute bottom-0 right-0 bg-green-500 rounded-full p-1"><HiBadgeCheck className="w-5 h-5 text-white" /></div>}
                             </div>
                             <div className="flex-1">
@@ -125,7 +125,7 @@ const UserProfilePage = () => {
                             <div className="space-y-4">
                                 {ratings.slice(0, 5).map(r => (
                                     <div key={r.id} className="flex space-x-3 pb-4 border-b last:border-0">
-                                        <img src={r.rater?.profile?.profilePicture || 'https://ui-avatars.com/api/?name=U'} alt="" className="w-10 h-10 rounded-full" />
+                                        <img src={r.rater?.profile?.profilePicture || '/default-avatar.svg'} alt="" className="w-10 h-10 rounded-full" />
                                         <div>
                                             <div className="flex items-center space-x-2">
                                                 <span className="font-medium">{r.rater?.profile?.fullName || `User #${r.raterId}`}</span>
