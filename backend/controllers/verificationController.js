@@ -14,7 +14,11 @@ const { asyncHandler, ApiError } = require('../middleware/errorHandler');
 const submitVerification = asyncHandler(async (req, res) => {
     // Check for existing pending request
     const existing = await VerificationRequest.findOne({
+<<<<<<< HEAD
         where: { userId: req.user.id, status: 'pending_review' }
+=======
+        where: { userId: req.user.id, status: 'pending' }
+>>>>>>> 68e4e4e5796a16bd1d003e2b47c8c150f553dcda
     });
 
     if (existing) {
@@ -44,7 +48,11 @@ const submitVerification = asyncHandler(async (req, res) => {
         idDocNumber: idDocNumber || '',
         idFrontUrl: `/uploads/verification/${req.files.idFront[0].filename}`,
         selfieUrl: `/uploads/verification/${req.files.selfie[0].filename}`,
+<<<<<<< HEAD
         status: 'pending_review'
+=======
+        status: 'pending'
+>>>>>>> 68e4e4e5796a16bd1d003e2b47c8c150f553dcda
     });
 
     res.status(201).json({
@@ -79,9 +87,15 @@ const getMyVerification = asyncHandler(async (req, res) => {
 const getAllVerifications = asyncHandler(async (req, res) => {
     const { status = 'pending_review' } = req.query;
     const where = {};
+<<<<<<< HEAD
     // status is already 'pending_review' or 'approved' or 'rejected' from frontend or default
     if (status !== 'all') {
         where.status = status;
+=======
+    // Map frontend 'pending_review' to DB 'pending' status
+    if (status !== 'all') {
+        where.status = status === 'pending_review' ? 'pending' : status;
+>>>>>>> 68e4e4e5796a16bd1d003e2b47c8c150f553dcda
     }
 
     const verifications = await VerificationRequest.findAll({

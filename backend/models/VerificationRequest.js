@@ -51,8 +51,13 @@ const VerificationRequest = sequelize.define('VerificationRequest', {
         field: 'selfie_url'
     },
     status: {
+<<<<<<< HEAD
         type: DataTypes.ENUM('pending_review', 'approved', 'rejected'),
         defaultValue: 'pending_review'
+=======
+        type: DataTypes.ENUM('pending', 'approved', 'rejected'),
+        defaultValue: 'pending'
+>>>>>>> 68e4e4e5796a16bd1d003e2b47c8c150f553dcda
     },
     rejectionReason: {
         type: DataTypes.TEXT,
