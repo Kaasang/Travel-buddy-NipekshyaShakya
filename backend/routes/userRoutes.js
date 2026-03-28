@@ -25,7 +25,6 @@ const {
 // Profile validation
 const profileValidation = [
     body('fullName')
-<<<<<<< HEAD
         .optional({ values: 'falsy' })
         .isLength({ min: 2, max: 100 })
         .withMessage('Full name must be between 2 and 100 characters'),
@@ -43,25 +42,6 @@ const profileValidation = [
         .withMessage('Invalid travel style'),
     body('groupSizePreference')
         .optional({ values: 'falsy' })
-=======
-        .optional()
-        .isLength({ min: 2, max: 100 })
-        .withMessage('Full name must be between 2 and 100 characters'),
-    body('age')
-        .optional()
-        .isInt({ min: 18, max: 120 })
-        .withMessage('Age must be between 18 and 120'),
-    body('gender')
-        .optional()
-        .isIn(['male', 'female', 'other', 'prefer_not_to_say'])
-        .withMessage('Invalid gender value'),
-    body('travelStyle')
-        .optional()
-        .isIn(['budget', 'moderate', 'luxury', 'adventure', 'backpacker'])
-        .withMessage('Invalid travel style'),
-    body('groupSizePreference')
-        .optional()
->>>>>>> 68e4e4e5796a16bd1d003e2b47c8c150f553dcda
         .isInt({ min: 2, max: 20 })
         .withMessage('Group size must be between 2 and 20')
 ];

@@ -137,11 +137,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         isAuthenticated,
         isAdmin: user?.role === 'admin',
-<<<<<<< HEAD
         isVerified: user?.isVerified === true,
-=======
-        isVerified: user?.verificationStatus === 'approved',
->>>>>>> 68e4e4e5796a16bd1d003e2b47c8c150f553dcda
         register,
         login,
         logout,

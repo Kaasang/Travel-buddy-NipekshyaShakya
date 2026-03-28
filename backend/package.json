@@ -21,10 +21,6 @@
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
-<<<<<<< HEAD
     "nodemon": "^3.1.14"
-=======
-    "nodemon": "^3.0.2"
->>>>>>> 68e4e4e5796a16bd1d003e2b47c8c150f553dcda
   }
 }
