@@ -9,7 +9,7 @@ require('dotenv').config();
 const sequelize = new Sequelize(
     process.env.DB_NAME || 'travel_buddy',
     process.env.DB_USER || 'root',
-    process.env.DB_PASSWORD || '1234',
+    process.env.DB_PASSWORD || '12345',
     {
         host: process.env.DB_HOST || 'localhost',
         port: process.env.DB_PORT || 3306,
